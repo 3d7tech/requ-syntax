@@ -1,6 +1,7 @@
 import type { Common } from "../model";
 import { measure, wrap } from "./text";
 import type {
+  Band,
   Box,
   PlacedEdge,
   PlacedLabel,
@@ -13,13 +14,38 @@ export interface Connection extends Common {
   from: string;
   to: string;
 }
-const EPS = 0.001;
+export interface RoutingOptions {
+  mode?: "row" | "column";
+  bands?: Band[];
+  maxY?: number;
+}
+const EPS = 0.001,
+  MIN_PORT_GAP = 24,
+  CLEARANCE = 8;
 const same = (a: number, b: number) => Math.abs(a - b) < EPS;
 export function segments(points: Point[]): [Point, Point][] {
   return points
     .slice(1)
     .map((p, i): [Point, Point] => [points[i], p])
     .filter(([a, b]) => !same(a.x, b.x) || !same(a.y, b.y));
+}
+export function segmentDistance(
+  a: Point,
+  b: Point,
+  c: Point,
+  d: Point,
+): number {
+  const dx = Math.max(
+    0,
+    Math.min(a.x, b.x) - Math.max(c.x, d.x),
+    Math.min(c.x, d.x) - Math.max(a.x, b.x),
+  );
+  const dy = Math.max(
+    0,
+    Math.min(a.y, b.y) - Math.max(c.y, d.y),
+    Math.min(c.y, d.y) - Math.max(a.y, b.y),
+  );
+  return Math.hypot(dx, dy);
 }
 export function segmentsOverlap(
   a: Point,
@@ -54,130 +80,188 @@ function hits(a: Point, b: Point, box: Box, pad = 8): boolean {
     y = box.y - pad,
     w = box.width + 2 * pad,
     h = box.height + 2 * pad;
-  if (same(a.y, b.y))
-    return (
-      a.y > y + EPS &&
-      a.y < y + h - EPS &&
-      Math.max(a.x, b.x) > x + EPS &&
-      Math.min(a.x, b.x) < x + w - EPS
-    );
-  return (
-    a.x > x + EPS &&
-    a.x < x + w - EPS &&
-    Math.max(a.y, b.y) > y + EPS &&
-    Math.min(a.y, b.y) < y + h - EPS
-  );
+  return same(a.y, b.y)
+    ? a.y > y + EPS &&
+        a.y < y + h - EPS &&
+        Math.max(a.x, b.x) > x + EPS &&
+        Math.min(a.x, b.x) < x + w - EPS
+    : a.x > x + EPS &&
+        a.x < x + w - EPS &&
+        Math.max(a.y, b.y) > y + EPS &&
+        Math.min(a.y, b.y) < y + h - EPS;
 }
-function directions(a: PlacedNode, b: PlacedNode): Side[] {
-  const dx = b.x + b.width / 2 - a.x - a.width / 2,
-    dy = b.y + b.height / 2 - a.y - a.height / 2;
-  const scores: { side: Side; score: number }[] = [
-    { side: "right", score: dx },
-    { side: "left", score: -dx },
-    { side: "bottom", score: dy },
-    { side: "top", score: -dy },
-  ];
-  return scores.sort((x, y) => y.score - x.score).map((x) => x.side);
+const opposite: Record<Side, Side> = {
+  left: "right",
+  right: "left",
+  top: "bottom",
+  bottom: "top",
+};
+const row = (n: PlacedNode) => n.row ?? n.y + n.height / 2;
+const column = (n: PlacedNode) => n.column ?? n.x + n.width / 2;
+function sameRow(a: PlacedNode, b: PlacedNode): boolean {
+  return a.lane && b.lane
+    ? a.lane === b.lane
+    : a.row !== undefined && b.row !== undefined
+      ? a.row === b.row
+      : Math.abs(row(a) - row(b)) < Math.max(a.height, b.height) / 2;
+}
+/** One grid rule: follow the primary band; within a band face the other axis. */
+export function exitSide(
+  a: PlacedNode,
+  b: PlacedNode,
+  mode: "row" | "column" = "row",
+): Side {
+  if (a.id === b.id) return "right";
+  if (mode === "column" && !same(column(a), column(b)))
+    return column(b) > column(a) ? "right" : "left";
+  if (!sameRow(a, b)) return row(b) > row(a) ? "bottom" : "top";
+  return b.x + b.width / 2 >= a.x + a.width / 2 ? "right" : "left";
 }
 interface Request {
   edge: Connection;
   node: PlacedNode;
   side: Side;
   out: boolean;
+  offset?: number;
   port?: Port;
 }
-function allocatePorts(
+function verticalPair(
+  a: PlacedNode,
+  b: PlacedNode,
+  e: Connection,
+  edges: Connection[],
+  options: RoutingOptions,
+): boolean {
+  return (
+    options.mode !== "column" &&
+    !sameRow(a, b) &&
+    same(column(a), column(b)) &&
+    edges.some((other) => other.from === e.to && other.to === e.from)
+  );
+}
+function requestsFor(
   nodes: PlacedNode[],
   edges: Connection[],
-): Map<string, { source: Port; target: Port }> {
+  options: RoutingOptions,
+): Request[] {
   const map = new Map(nodes.map((n) => [n.id, n])),
-    requests: Request[] = [],
-    used = new Map<string, Set<Side>>();
-  const sourceSides = new Map<string, Side>();
-  for (const edge of edges) {
-    const a = map.get(edge.from)!,
-      b = map.get(edge.to)!;
-    let side = edge.from === edge.to ? ("right" as Side) : directions(a, b)[0];
-    if (a.diamond) {
-      const sides = used.get(a.id) ?? new Set<Side>();
-      side = directions(a, b).find((s) => !sides.has(s)) ?? side;
-      sides.add(side);
-      used.set(a.id, sides);
+    sides = new Map(
+      edges.map((e) => [
+        e.id,
+        exitSide(map.get(e.from)!, map.get(e.to)!, options.mode),
+      ]),
+    );
+  for (const a of nodes.filter((n) => n.diamond)) {
+    const outgoing = edges.filter((e) => e.from === a.id),
+      used = new Set<Side>();
+    // Same-lane continuation keeps right; the off-lane branch takes top/bottom.
+    const ordered = [...outgoing].sort(
+      (x, y) =>
+        Number(sameRow(a, map.get(y.to)!)) - Number(sameRow(a, map.get(x.to)!)),
+    );
+    for (const e of ordered) {
+      const b = map.get(e.to)!;
+      let side = sides.get(e.id)!;
+      if (used.has(side)) {
+        const alternatives: Side[] = sameRow(a, b)
+          ? ["right", "bottom", "top", "left"]
+          : [
+              row(b) > row(a) ? "bottom" : "top",
+              "right",
+              row(b) > row(a) ? "top" : "bottom",
+              "left",
+            ];
+        side = alternatives.find((s) => !used.has(s)) ?? side;
+      }
+      used.add(side);
+      sides.set(e.id, side);
     }
-    sourceSides.set(edge.id, side);
   }
+  const requests: Request[] = [];
   for (const edge of edges) {
     const a = map.get(edge.from)!,
       b = map.get(edge.to)!,
-      reverse = edges.find(
-        (e) => e.id !== edge.id && e.from === edge.to && e.to === edge.from,
-      );
+      side = sides.get(edge.id)!;
+    const pair = verticalPair(a, b, edge, edges, options),
+      offset = pair ? (row(b) > row(a) ? -16 : 16) : undefined;
     requests.push(
-      { edge, node: a, side: sourceSides.get(edge.id)!, out: true },
+      { edge, node: a, side, out: true, offset },
       {
         edge,
         node: b,
-        side:
-          edge.from === edge.to
-            ? "bottom"
-            : reverse
-              ? sourceSides.get(reverse.id)!
-              : directions(b, a)[0],
+        side: a.id === b.id ? "bottom" : opposite[side],
         out: false,
+        offset,
       },
     );
   }
   for (const node of nodes)
     for (const side of ["left", "right", "top", "bottom"] as Side[]) {
       const group = requests.filter((r) => r.node === node && r.side === side),
-        ordered: Request[] = [],
-        pending = [...group];
-      while (pending.length) {
-        const request = pending.shift()!;
-        const reverse = pending.find(
-          (r) =>
-            r.edge.from === request.edge.to &&
-            r.edge.to === request.edge.from &&
-            r.out !== request.out,
-        );
-        if (reverse) {
-          pending.splice(pending.indexOf(reverse), 1);
-          const normalPositive = side === "right" || side === "top";
-          const forwardFirst = request.out === normalPositive;
-          ordered.push(
-            ...(forwardFirst ? [request, reverse] : [reverse, request]),
-          );
-        } else ordered.push(request);
-      }
-      const available =
-        (side === "left" || side === "right" ? node.height : node.width) - 24;
-      const spacing = Math.min(12, available / Math.max(1, ordered.length - 1));
-      ordered.forEach((r, i) => {
-        const offset = (i - (ordered.length - 1) / 2) * spacing,
-          cx = node.x + node.width / 2,
-          cy = node.y + node.height / 2;
-        let x = cx,
-          y = cy;
-        if (side === "left" || side === "right") {
-          y += offset;
-          x +=
-            (side === "right" ? 1 : -1) *
-            (node.width / 2 -
-              (node.diamond
-                ? (Math.abs(offset) * node.width) / node.height
-                : 0));
-        } else {
-          x += offset;
-          y +=
-            (side === "bottom" ? 1 : -1) *
-            (node.height / 2 -
-              (node.diamond
-                ? (Math.abs(offset) * node.height) / node.width
-                : 0));
+        fixed = group.filter((r) => r.offset !== undefined),
+        free = group.filter((r) => r.offset === undefined);
+      const assigned = fixed.map((r) => r.offset!);
+      free.forEach((r, i) => {
+        if (!fixed.length)
+          r.offset = (i - (free.length - 1) / 2) * MIN_PORT_GAP;
+        else {
+          let distance = 40;
+          while (assigned.some((x) => Math.abs(x - distance) < 24))
+            distance += 24;
+          r.offset = distance;
+          assigned.push(distance);
         }
-        r.port = { x, y, side, node: node.id };
       });
     }
+  return requests;
+}
+export function portRequirements(
+  nodes: PlacedNode[],
+  edges: Connection[],
+  options: RoutingOptions = {},
+): Map<string, { width: number; height: number }> {
+  const result = new Map(nodes.map((n) => [n.id, { width: 16, height: 16 }]));
+  for (const r of requestsFor(nodes, edges, options)) {
+    const size = result.get(r.node.id)!,
+      axis = r.side === "left" || r.side === "right" ? "height" : "width";
+    size[axis] = Math.max(size[axis], Math.abs(r.offset!) * 2 + 16);
+  }
+  return result;
+}
+function allocatePorts(
+  nodes: PlacedNode[],
+  edges: Connection[],
+  options: RoutingOptions,
+): Map<string, { source: Port; target: Port }> {
+  const requests = requestsFor(nodes, edges, options);
+  for (const r of requests) {
+    const node = r.node,
+      side = r.side,
+      offset = r.offset!,
+      cx = node.x + node.width / 2,
+      cy = node.y + node.height / 2;
+    let x = cx,
+      y = cy;
+    if (side === "left" || side === "right") {
+      y += offset;
+      x +=
+        (side === "right" ? 1 : -1) *
+        (node.width / 2 -
+          (node.diamond ? (Math.abs(offset) * node.width) / node.height : 0));
+    } else {
+      x += offset;
+      y +=
+        (side === "bottom" ? 1 : -1) *
+        (node.height / 2 -
+          (node.diamond ? (Math.abs(offset) * node.height) / node.width : 0));
+    }
+    if (
+      Math.abs(offset) >
+      (side === "left" || side === "right" ? node.height : node.width) / 2 - 8
+    )
+      throw Error("Node is too small for 24px port spacing.");
+    r.port = { x, y, side, node: node.id };
+  }
   return new Map(
     edges.map((e) => [
       e.id,
@@ -191,13 +275,13 @@ function allocatePorts(
 function stub(p: Port, n: PlacedNode): Point {
   switch (p.side) {
     case "left":
-      return { x: n.x - 32, y: p.y };
+      return { x: n.x - 24, y: p.y };
     case "right":
-      return { x: n.x + n.width + 32, y: p.y };
+      return { x: n.x + n.width + 24, y: p.y };
     case "top":
-      return { x: p.x, y: n.y - 32 };
+      return { x: p.x, y: n.y - 24 };
     case "bottom":
-      return { x: p.x, y: n.y + n.height + 32 };
+      return { x: p.x, y: n.y + n.height + 24 };
   }
 }
 function simplify(points: Point[]): Point[] {
@@ -266,41 +350,50 @@ class Heap {
     return first;
   }
 }
+
 function path(
   start: Point,
   end: Point,
   nodes: PlacedNode[],
   occupied: [Point, Point][],
+  reserved: [Point, Point][],
   minX: number,
   minY: number,
-  pad: number,
+  maxY: number,
+  initialDir: number,
+  finalDir: number,
 ): Point[] {
   const xs = new Set<number>([start.x, end.x, minX]),
     ys = new Set<number>([start.y, end.y, minY]);
+  const addX = (x: number) => {
+      if (x >= minX) xs.add(x);
+    },
+    addY = (y: number) => {
+      if (y >= minY && y <= maxY) ys.add(y);
+    };
   for (const n of nodes) {
     for (const x of [
-      n.x - 32,
-      n.x - 44,
-      n.x + n.width + 32,
-      n.x + n.width + 44,
+      n.x - 24,
+      n.x - 48,
+      n.x + n.width + 24,
+      n.x + n.width + 48,
     ])
-      if (x >= minX) xs.add(x);
+      addX(x);
     for (const y of [
-      n.y - 32,
-      n.y - 44,
-      n.y + n.height + 32,
-      n.y + n.height + 44,
+      n.y - 16,
+      n.y - 24,
+      n.y + n.height + 16,
+      n.y + n.height + 24,
     ])
-      if (y >= minY) ys.add(y);
+      addY(y);
   }
-  for (const [a, b] of occupied) {
+  for (const [a, b] of occupied)
     for (const p of [a, b]) {
-      if (p.x - 12 >= minX) xs.add(p.x - 12);
-      xs.add(p.x + 12);
-      if (p.y - 12 >= minY) ys.add(p.y - 12);
-      ys.add(p.y + 12);
+      addX(p.x - 16);
+      addX(p.x + 16);
+      addY(p.y - 16);
+      addY(p.y + 16);
     }
-  }
   const xList = [...xs].sort((a, b) => a - b),
     yList = [...ys].sort((a, b) => a - b),
     sx = xList.indexOf(start.x),
@@ -310,12 +403,17 @@ function path(
   const open = new Heap(),
     best = new Map<string, number>(),
     previous = new Map<string, string>(),
-    entries = new Map<string, Entry>();
+    entries = new Map<string, Entry>(),
+    // One bend costs more than every possible simple path's total length.
+    BEND =
+      (xList.length * yList.length + 1) *
+        Math.max(1, xList.at(-1)! - xList[0] + yList.at(-1)! - yList[0]) +
+      1;
   const first: Entry = {
-    key: `${sx},${sy},0`,
+    key: `${sx},${sy},${initialDir}`,
     x: sx,
     y: sy,
-    dir: 0,
+    dir: initialDir,
     cost: 0,
     priority: 0,
   };
@@ -323,21 +421,22 @@ function path(
   best.set(first.key, 0);
   entries.set(first.key, first);
   const clear = new Map<string, boolean>();
-  let visited = 0;
+  let visited = 0,
+    goal: Entry | undefined,
+    goalCost = Infinity;
   while (open.items.length) {
     const current = open.pop()!;
     if (current.cost !== best.get(current.key)) continue;
+    if (current.priority >= goalCost) break;
     if (current.x === ex && current.y === ey) {
-      const route: Point[] = [];
-      let key: string | undefined = current.key;
-      while (key) {
-        const e: Entry = entries.get(key)!;
-        route.push({ x: xList[e.x], y: yList[e.y] });
-        key = previous.get(key);
+      const cost = current.cost + (current.dir !== finalDir ? BEND : 0);
+      if (cost < goalCost) {
+        goal = current;
+        goalCost = cost;
       }
-      return route.reverse();
+      continue;
     }
-    if (++visited > 160000) throw Error("Routing search limit exceeded.");
+    if (++visited > 200000) throw Error("Routing search limit exceeded.");
     for (const [dx, dy, dir] of [
       [1, 0, 1],
       [-1, 0, 1],
@@ -349,20 +448,23 @@ function path(
       if (x < 0 || y < 0 || x >= xList.length || y >= yList.length) continue;
       const a = { x: xList[current.x], y: yList[current.y] },
         b = { x: xList[x], y: yList[y] },
-        segmentKey = [current.x, current.y, x, y].join(",");
-      let allowed = clear.get(segmentKey);
+        cache = [current.x, current.y, x, y].join(",");
+      let allowed = clear.get(cache);
       if (allowed === undefined) {
         allowed =
-          !nodes.some((n) => hits(a, b, n, pad)) &&
-          !occupied.some(([c, d]) => segmentsOverlap(a, b, c, d));
-        clear.set(segmentKey, allowed);
+          !nodes.some((n) => hits(a, b, n, 8)) &&
+          !occupied.some(
+            ([c, d]) => segmentDistance(a, b, c, d) < CLEARANCE - EPS,
+          ) &&
+          !reserved.some(([c, d]) => segmentsOverlap(a, b, c, d));
+        clear.set(cache, allowed);
       }
       if (!allowed) continue;
       const cost =
           current.cost +
           Math.abs(a.x - b.x) +
           Math.abs(a.y - b.y) +
-          (current.dir && current.dir !== dir ? 18 : 0),
+          (current.dir !== dir ? BEND : 0),
         key = `${x},${y},${dir}`;
       if (cost >= (best.get(key) ?? Infinity)) continue;
       const entry = {
@@ -379,22 +481,15 @@ function path(
       open.push(entry);
     }
   }
-  throw Error("No free orthogonal route.");
-}
-function offsetPath(points: Point[], distance: number): Point[] {
-  const ss = segments(points),
-    normals = ss.map(([a, b]) => ({
-      x: same(a.x, b.x) ? -Math.sign(b.y - a.y) * distance : 0,
-      y: same(a.y, b.y) ? Math.sign(b.x - a.x) * distance : 0,
-    }));
-  return points.map((p, i) => {
-    if (i === 0) return { x: p.x + normals[0].x, y: p.y + normals[0].y };
-    if (i === points.length - 1)
-      return { x: p.x + normals.at(-1)!.x, y: p.y + normals.at(-1)!.y };
-    const a = normals[i - 1],
-      b = normals[i];
-    return { x: p.x + (a.x || b.x), y: p.y + (a.y || b.y) };
-  });
+  if (!goal) throw Error("No orthogonal route with 8px edge clearance.");
+  const route: Point[] = [];
+  let key: string | undefined = goal.key;
+  while (key) {
+    const e: Entry = entries.get(key)!;
+    route.push({ x: xList[e.x], y: yList[e.y] });
+    key = previous.get(key);
+  }
+  return route.reverse();
 }
 function labels(
   edges: PlacedEdge[],
@@ -402,6 +497,7 @@ function labels(
   nodes: PlacedNode[],
   minX: number,
   minY: number,
+  options: RoutingOptions,
 ): void {
   const placed: PlacedLabel[] = [];
   for (const edge of edges) {
@@ -410,47 +506,83 @@ function labels(
     const lines = wrap(text, 144, 12, 3),
       width = Math.max(...lines.map((t) => measure(t, 12))) + 16,
       height = lines.length * 16 + 8;
-    const ss = segments(edge.points).sort(
-      ([a, b], [c, d]) =>
-        Math.abs(d.x - c.x) +
-        Math.abs(d.y - c.y) -
-        (Math.abs(b.x - a.x) + Math.abs(b.y - a.y)),
-    );
+    const pieces = segments(edge.points)
+      .flatMap(([a, b]) => {
+        if (!options.bands?.length || same(a.y, b.y))
+          return [[a, b] as [Point, Point]];
+        return options.bands.flatMap((band) => {
+          const lo = Math.max(Math.min(a.y, b.y), band.y),
+            hi = Math.min(Math.max(a.y, b.y), band.y + band.height);
+          return hi > lo
+            ? [
+                [
+                  { x: a.x, y: lo },
+                  { x: a.x, y: hi },
+                ] as [Point, Point],
+              ]
+            : [];
+        });
+      })
+      .sort(
+        ([a, b], [c, d]) =>
+          Math.abs(d.x - c.x) +
+          Math.abs(d.y - c.y) -
+          (Math.abs(b.x - a.x) + Math.abs(b.y - a.y)),
+      );
     let found: PlacedLabel | undefined;
-    for (const normal of [0, -1, 1, -2, 2, -3, 3, -4, 4, -6, 6]) {
+    const pairSide = edge.pair
+      ? edge.source.x <
+        nodes.find((n) => n.id === edge.source.node)!.x +
+          nodes.find((n) => n.id === edge.source.node)!.width / 2
+        ? -1
+        : 1
+      : 0;
+    for (const normal of pairSide ? [pairSide] : [0, -1, 1]) {
       if (found) break;
-      for (const [a, b] of ss) {
+      for (const [a, b] of pieces) {
         if (found) break;
-        for (const t of [0.5, 0.3, 0.7, 0.15, 0.85]) {
-          const horizontal = same(a.y, b.y),
-            x =
-              a.x +
-              (b.x - a.x) * t +
-              (horizontal ? 0 : normal * (width / 2 + 8)),
-            y =
-              a.y +
-              (b.y - a.y) * t +
-              (horizontal ? normal * (height / 2 + 8) : 0);
-          const box = {
-            x: x - width / 2,
-            y: y - height / 2,
-            width,
-            height,
-            lines,
-          };
+        const horizontal = same(a.y, b.y),
+          start = horizontal ? Math.min(a.x, b.x) : Math.min(a.y, b.y),
+          end = horizontal ? Math.max(a.x, b.x) : Math.max(a.y, b.y),
+          half = horizontal ? width / 2 : height / 2;
+        const positions = [
+          (start + end) / 2,
+          start + half + 4,
+          end - half - 4,
+          ...Array.from(
+            { length: Math.max(0, Math.floor((end - start) / 8)) },
+            (_, i) => start + half + 4 + i * 8,
+          ),
+        ];
+        for (const at of positions) {
+          if (at < start + half || at > end - half) continue;
+          const x = horizontal
+              ? at
+              : a.x + (normal ? normal * (width / 2 + 8) : 0),
+            y = horizontal
+              ? a.y + (normal ? normal * (height / 2 + 8) : 0)
+              : at,
+            box = { x: x - width / 2, y: y - height / 2, width, height, lines };
           if (
             box.x < minX ||
             box.y < minY ||
-            nodes.some((n) => boxesOverlap(box, n, 8)) ||
+            box.y + height > (options.maxY ?? Infinity) ||
+            nodes.some((n) => boxesOverlap(box, n, 6)) ||
             placed.some((p) => boxesOverlap(box, p, 6))
           )
             continue;
-          // Keep labels clear of other routes; paired labels naturally stagger.
+          if (
+            options.bands?.length &&
+            !options.bands.some(
+              (b) => box.y >= b.y + 2 && box.y + height <= b.y + b.height - 2,
+            )
+          )
+            continue;
           if (
             edges.some(
               (other) =>
                 other !== edge &&
-                segments(other.points).some(([c, d]) => hits(c, d, box, 3)),
+                segments(other.points).some(([c, d]) => hits(c, d, box, 4)),
             )
           )
             continue;
@@ -459,23 +591,7 @@ function labels(
         }
       }
     }
-    if (!found) {
-      const right =
-        Math.max(
-          minX,
-          ...nodes.map((n) => n.x + n.width),
-          ...placed.map((p) => p.x + p.width),
-        ) + 32;
-      found = {
-        x: right,
-        y: Math.max(minY, edge.points[0].y - height / 2),
-        width,
-        height,
-        lines,
-      };
-      while (placed.some((p) => boxesOverlap(found!, p, 6)))
-        found.y += height + 8;
-    }
+    if (!found) throw Error(`No label slot within 16px of edge ${edge.id}.`);
     edge.label = found;
     placed.push(found);
   }
@@ -485,40 +601,53 @@ export function routeEdges(
   connections: Connection[],
   minX: number,
   minY: number,
+  options: RoutingOptions = {},
 ): PlacedEdge[] {
-  const valid = connections.filter(
-      (c) =>
-        nodes.some((n) => n.id === c.from) && nodes.some((n) => n.id === c.to),
-    ),
-    ports = allocatePorts(nodes, valid),
+  const nodeMap = new Map(nodes.map((n) => [n.id, n])),
+    valid = connections.filter((c) => nodeMap.has(c.from) && nodeMap.has(c.to)),
+    ports = allocatePorts(nodes, valid, options),
     occupied: [Point, Point][] = [],
-    result = new Map<string, PlacedEdge>(),
-    nodeMap = new Map(nodes.map((n) => [n.id, n]));
-  // Route inverse pairs first so their two tracks can be offset exactly 12 px.
-  const pending = [...valid].sort(
-    (a, b) =>
-      Number(
-        valid.some((e) => e.from === b.to && e.to === b.from && e.id !== b.id),
-      ) -
-      Number(
-        valid.some((e) => e.from === a.to && e.to === a.from && e.id !== a.id),
+    result = new Map<string, PlacedEdge>();
+  const ordered = [...valid].sort((a, b) => {
+    const aPair = verticalPair(
+        nodeMap.get(a.from)!,
+        nodeMap.get(a.to)!,
+        a,
+        valid,
+        options,
       ),
-  );
-  for (const connection of pending) {
-    if (result.has(connection.id)) continue;
-    const { source, target } = ports.get(connection.id)!,
-      a = nodeMap.get(source.node)!,
-      b = nodeMap.get(target.node)!;
-    const reverse = pending.find(
-      (e) =>
-        e.id !== connection.id &&
-        !result.has(e.id) &&
-        e.from === connection.to &&
-        e.to === connection.from &&
-        e.from !== e.to,
+      bPair = verticalPair(
+        nodeMap.get(b.from)!,
+        nodeMap.get(b.to)!,
+        b,
+        valid,
+        options,
+      );
+    return (
+      Number(bPair) - Number(aPair) ||
+      Math.abs(row(nodeMap.get(b.from)!) - row(nodeMap.get(b.to)!)) -
+        Math.abs(row(nodeMap.get(a.from)!) - row(nodeMap.get(a.to)!))
     );
-    const start = stub(source, a),
+  });
+  for (const c of ordered) {
+    const { source, target } = ports.get(c.id)!,
+      a = nodeMap.get(c.from)!,
+      b = nodeMap.get(c.to)!,
+      isPair = verticalPair(a, b, c, valid, options),
+      start = stub(source, a),
       end = stub(target, b);
+    const protectedSegments: [Point, Point][] = [
+      ...occupied,
+      ...valid
+        .filter((other) => other.id !== c.id && !result.has(other.id))
+        .flatMap((other) => {
+          const p = ports.get(other.id)!;
+          return [
+            ...segments([p.source, stub(p.source, nodeMap.get(other.from)!)]),
+            ...segments([stub(p.target, nodeMap.get(other.to)!), p.target]),
+          ];
+        }),
+    ];
     const outward = (p: Port, q: Point) =>
       p.side === "left"
         ? q.x < p.x
@@ -529,83 +658,85 @@ export function routeEdges(
             : q.y > p.y;
     const direct =
       (same(source.x, target.x) || same(source.y, target.y)) &&
-      connection.from !== connection.to &&
+      a.id !== b.id &&
       outward(source, target) &&
       outward(target, source) &&
       !nodes
         .filter((n) => n.id !== a.id && n.id !== b.id)
         .some((n) => hits(source, target, n)) &&
-      !occupied.some(([c, d]) => segmentsOverlap(source, target, c, d));
-    const middle = direct
-      ? []
-      : path(
-          start,
-          end,
-          nodes,
-          [
-            ...occupied,
-            ...segments([source, start]),
-            ...segments([end, target]),
-          ],
-          minX,
-          minY,
-          reverse ? 20 : 8,
-        );
+      !protectedSegments.some(
+        ([e, f]) => segmentDistance(source, target, e, f) < 8 - EPS,
+      );
+    const candidates = [
+      simplify([source, start, { x: start.x, y: end.y }, end, target]),
+      simplify([source, start, { x: end.x, y: start.y }, end, target]),
+    ].filter(
+      (points) =>
+        points.length <= 4 &&
+        !segments(points).some(
+          ([p, q], i, all) =>
+            nodes.some(
+              (n) =>
+                !(
+                  (i === 0 && n.id === a.id) ||
+                  (i === all.length - 1 && n.id === b.id)
+                ) && hits(p, q, n, 8),
+            ) ||
+            protectedSegments.some(
+              ([g, h]) => segmentDistance(p, q, g, h) < 8 - EPS,
+            ),
+        ),
+    );
+    candidates.sort(
+      (x, y) =>
+        x.length - y.length ||
+        segments(x).reduce(
+          (sum, [p, q]) => sum + Math.abs(q.x - p.x) + Math.abs(q.y - p.y),
+          0,
+        ) -
+          segments(y).reduce(
+            (sum, [p, q]) => sum + Math.abs(q.x - p.x) + Math.abs(q.y - p.y),
+            0,
+          ),
+    );
     const points = direct
       ? [source, target]
-      : simplify([source, ...middle, target]);
-    const edge: PlacedEdge = {
-      id: connection.id,
-      points,
-      back: b.x <= a.x || connection.from === connection.to,
-      source,
-      target,
-      ...(reverse ? { pair: reverse.id } : {}),
-    };
+      : (candidates[0] ??
+        simplify([
+          source,
+          ...path(
+            start,
+            end,
+            nodes,
+            protectedSegments,
+            [...segments([source, start]), ...segments([end, target])],
+            minX,
+            minY,
+            options.maxY ?? Infinity,
+            source.side === "left" || source.side === "right" ? 1 : 2,
+            target.side === "left" || target.side === "right" ? 1 : 2,
+          ),
+          target,
+        ]));
     if (
-      segments(points).some(([p, q]) =>
-        occupied.some(([c, d]) => segmentsOverlap(p, q, c, d)),
+      segments(points).some(([e, f]) =>
+        occupied.some(([g, h]) => segmentDistance(e, f, g, h) < 8 - EPS),
       )
     )
-      throw Error("Port segment conflicts with an earlier route.");
-    result.set(connection.id, edge);
+      throw Error("Edge clearance violated at a port.");
+    result.set(c.id, {
+      id: c.id,
+      points,
+      source,
+      target,
+      back: column(b) <= column(a),
+      ...(isPair
+        ? { pair: valid.find((e) => e.from === c.to && e.to === c.from)!.id }
+        : {}),
+    });
     occupied.push(...segments(points));
-    if (reverse) {
-      const rp = ports.get(reverse.id)!;
-      let parallel = offsetPath(points, 12).reverse();
-      const first = parallel[0],
-        last = parallel.at(-1)!;
-      // Port ordering follows the directed segment normal; use its signed offset.
-      if (
-        Math.abs(first.x - rp.source.x) + Math.abs(first.y - rp.source.y) > 1 ||
-        Math.abs(last.x - rp.target.x) + Math.abs(last.y - rp.target.y) > 1
-      )
-        parallel = offsetPath(points, -12).reverse();
-      parallel[0] = rp.source;
-      parallel[parallel.length - 1] = rp.target;
-      parallel = simplify(parallel);
-      if (
-        segments(parallel).some(([p, q]) => !same(p.x, q.x) && !same(p.y, q.y))
-      )
-        throw Error("Parallel track port mismatch.");
-      if (
-        segments(parallel).some(([p, q]) =>
-          occupied.some(([c, d]) => segmentsOverlap(p, q, c, d)),
-        )
-      )
-        throw Error("Parallel track conflicts with an earlier route.");
-      result.set(reverse.id, {
-        id: reverse.id,
-        points: parallel,
-        back: true,
-        source: rp.source,
-        target: rp.target,
-        pair: connection.id,
-      });
-      occupied.push(...segments(parallel));
-    }
   }
   const edges = valid.map((c) => result.get(c.id)!);
-  labels(edges, valid, nodes, minX, minY);
+  labels(edges, valid, nodes, minX, minY, options);
   return edges;
 }

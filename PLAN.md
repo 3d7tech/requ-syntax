@@ -12,7 +12,7 @@ Working folder: `/Users/3d7tech/requ-syntax`. The user will create the GitHub re
 
 ## Deliverables
 
-- `packages/core`: strict TypeScript, ESM; text → parser → resolved model → lint → layout → self-contained SVG. Shared Node/browser implementation; elkjs is its only runtime dependency.
+- `packages/core`: strict TypeScript, ESM; text → parser → resolved model → lint → layout → self-contained SVG. Shared Node/browser implementation; there are no runtime dependencies after the approved deterministic-grid change.
 - `packages/cli`: render SVG or resolved JSON; lint; file and stdin input; clean stdout with diagnostics on stderr.
 - `packages/web`: automatic code-block rendering, ESM and IIFE bundles, and reactive `<requ-diagram>` with diagnostic events.
 - `apps/playground`: CodeMirror, preview, example picker, diagnostics, copy/download controls and compressed share links. No backend.
@@ -26,7 +26,7 @@ Working folder: `/Users/3d7tech/requ-syntax`. The user will create the GitHub re
 | 2. Parse               | Lexer, both diagram kinds, attributes, source locations, recovery, owner inheritance and reference resolution | Both supplied examples have no parse errors; every leniency rule tested; 1,000 reproducible random inputs never throw     |
 | 3. Lint                | E/W/I diagnostics and all ten R rules, exact repair hints                                                     | Each rule has matching/nonmatching fixtures; loan yields only R010; Northbank yields R001 for ops and assist, no R002     |
 | 4. Process SVG         | Lane grid, cycle handling, edge routing, wrapped text, themes and badges                                      | Loan visual acceptance, no overlapping nodes, stable snapshot; check edge/node and label collisions                       |
-| 5. Org SVG             | ELK team layout, journey strip, process lists and handoffs                                                    | Six cards, four stages, four labelled handoffs, actor styling and stable snapshot                                         |
+| 5. Org SVG             | Deterministic team grid, journey strip, process lists and handoffs                                            | Six cards, four stages, four labelled handoffs, actor styling and stable snapshot                                         |
 | 6. CLI and web         | Commands, JSON, stdin/stdout, browser script and component                                                    | CLI integration checks; two code blocks plus a component render; changes rerender without mutation loops or stale results |
 | 7. Playground and docs | Editor/preview, diagnostics, examples, sharing, downloads, gallery and usage docs                             | Share links round-trip; all nine examples render; phone/desktop visual review; static build ready                         |
 
@@ -73,3 +73,7 @@ These three choices are settled. Overall build and proposed technical decisions 
 - GitHub owner and repository URL: user will create requ-syntax later.
 - Confirm how the separate repo’s static artifact joins the current GitHub Actions release at /dev before deployment.
 - Package publishing and live deployment follow a review of the completed build; planning approval alone does not publish packages.
+
+## Latest approved renderer change
+
+The user's 21 October follow-up replaces the prior ELK/ad-hoc routing details: shared grid-based directional ports, 24px minimum spacing, bend-first paths with 8px edge clearance, cross-lane reverse pairs contracted to one column and vertical ±16px tracks, process labels near their own segments and inside lanes, and org longest-path columns plus shared first-stage rows. Missing owner lines collapse unless annotate is enabled. See DECISIONS.md and STATUS.md for implementation and validation.

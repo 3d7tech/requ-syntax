@@ -2,11 +2,13 @@
 
 Approved 21 October 2026. M1–M6 committed locally.
 
-## Renderer corrections complete
+## Unified routing and grid changes complete
 
-Process items 3–7 and org items 1–6 are implemented. Golden snapshots updated, including annotated Northbank.
+The latest routing request is implemented in both renderers. Shared per-side port planning supplies placement, sizing and routes. Same-side ports are at least 24px apart; edge segments keep 8px clearance and do not cross. Process cross-lane inverse pairs share a column and use vertical tracks at centre ±16px, with separate outer labels. Labels stay within 16px of their own segment and inside a lane. Decision exits differ.
 
-Validation: 137 tests across nine files pass; build, lint and strict TypeScript pass. Both ESM/IIFE bundles pass real-browser embed, link/back, source and theme checks. Browser checks find no text collisions in all ten SVG snapshots and verify 8px diamond label padding. Twenty-five geometry regressions cover shared segments, label boxes, 12px straight/bent reverse tracks, decisions, ports, lane sizes, badges, pills, card order and annotation. Tests cover the supplied examples and targeted fixtures, not a proof for every possible graph. Routing has a bounded search and returns an E009 diagnostic if no layout can be found.
+Org uses deterministic longest-path columns and shared first-stage rows, with 160px row slots; no ELK remains. Missing owner lines collapse unless annotation is enabled. Northbank uses five rows and is 1,016px high including the title/journey strip. Same-cell conflicts and tall cards reserve additional grid rows. All handoffs still render, including back edges omitted only from layer assignment.
+
+Validation: 171 tests across ten files pass; build, lint and strict TypeScript pass. Both ESM/IIFE bundles pass real-browser embed, link/back, source and theme checks. All ten golden SVGs pass browser text-bounds and 8px diamond-padding checks. Tests verify zero edge crossings and 8px clearance in all nine examples, including loan and Northbank, plus decision sides, 24px spacing, inverse columns/tracks, label constraints and org height. Tests cover examples and targeted fixtures; an unsatisfiable graph returns an E009 diagnostic rather than violating routing rules.
 
 ## M7 remaining
 

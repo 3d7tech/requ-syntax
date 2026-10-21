@@ -175,7 +175,7 @@ export async function render(
         diagnostics,
       };
     if (d.kind === "org") {
-      const layout = await layoutOrg(d);
+      const layout = await layoutOrg(d, { annotate: opts.annotate });
       const refs = new Set(
         result.doc.diagrams
           .filter((x) => x.kind === "process")
@@ -266,7 +266,7 @@ function orgMarkup(
       const processes = team.processes
         .slice(0, 6)
         .map((p, i) => {
-          const y = b.y + 102 + i * 26,
+          const y = b.y + (b.headerHeight ?? 80) + 22 + i * 26,
             label = textLines(p.label, b.x + 16, y, 212, 12, 1, "start"),
             link = p.ref && refs.has(p.ref);
           return `<g ${attrs(p, "process")}>${title(p)}${link ? `<a href="#requ-diagram-${esc(p.ref!)}" data-requ-ref="${esc(p.ref!)}"><rect x="${b.x + 8}" y="${y - 18}" width="248" height="24" fill="transparent"/>${label}<text x="${b.x + 240}" y="${y}">↗</text></a>` : label + (p.ref ? `<text class="muted" x="${b.x + 240}" y="${y}">↗</text>` : "")}${p.basis === "suggested" ? `<text class="badge" x="${b.x + 230}" y="${y}">?</text>` : ""}</g>`;
@@ -277,7 +277,7 @@ function orgMarkup(
         : annotate && (team.type === "team" || team.type === "agent")
           ? `<text class="muted requ-no-owner" x="${b.x + 16}" y="${b.y + 63}" style="font-style:italic">No owner</text>`
           : "";
-      return `<g ${attrs(team, "team", `actor-${team.type}`)} tabindex="0">${title(team)}<rect class="shape" x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" rx="9"/><path class="requ-team-accent" d="M${b.x + 2} ${b.y + 9}V${b.y + b.height - 9}" stroke="${color}" stroke-width="4"/>${icon(team.type, b.x + 16, b.y + 22)}${textLines(team.label, b.x + 44, b.y + 35, team.type === "agent" ? 168 : 194, 14, 1, "start")}${owner}${team.type === "agent" ? `<text class="badge" x="${b.x + 232}" y="${b.y + 35}">AI</text>` : ""}${team.basis === "suggested" ? `<text class="badge" x="${b.x + 248}" y="${b.y + 16}">?</text>` : ""}${team.processes.length ? `<g class="requ-process-section"><path class="requ-process-divider" d="M${b.x} ${b.y + 80}h${b.width}" stroke="var(--line)"/>${processes}${team.processes.length > 6 ? `<text class="muted" x="${b.x + 16}" y="${b.y + b.height - 14}">+${team.processes.length - 6} more</text>` : ""}</g>` : ""}</g>`;
+      return `<g ${attrs(team, "team", `actor-${team.type}`)} tabindex="0">${title(team)}<rect class="shape" x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" rx="9"/><path class="requ-team-accent" d="M${b.x + 2} ${b.y + 9}V${b.y + b.height - 9}" stroke="${color}" stroke-width="4"/>${icon(team.type, b.x + 16, b.y + 22)}${textLines(team.label, b.x + 44, b.y + 35, team.type === "agent" ? 168 : 194, 14, 1, "start")}${owner}${team.type === "agent" ? `<text class="badge" x="${b.x + 232}" y="${b.y + 35}">AI</text>` : ""}${team.basis === "suggested" ? `<text class="badge" x="${b.x + 248}" y="${b.y + 16}">?</text>` : ""}${team.processes.length ? `<g class="requ-process-section"><path class="requ-process-divider" d="M${b.x} ${b.y + (b.headerHeight ?? 80)}h${b.width}" stroke="var(--line)"/>${processes}${team.processes.length > 6 ? `<text class="muted" x="${b.x + 16}" y="${b.y + b.height - 14}">+${team.processes.length - 6} more</text>` : ""}</g>` : ""}</g>`;
     })
     .join("");
   return journey + edgeMarkup(l, d.handoffs, prefix) + cards;

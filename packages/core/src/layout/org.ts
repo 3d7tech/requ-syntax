@@ -1,7 +1,7 @@
-import ELK, { type ElkNode } from "elkjs/lib/elk.bundled.js";
+import { longestLayers } from "./layers";
 import type { OrgDiagram } from "../model";
 import { measure, wrap } from "./text";
-import { routeEdges } from "./routing";
+import { portRequirements, routeEdges } from "./routing";
 import type { JourneyStage, Layout } from "./types";
 export function journeyTeamOrder(d: OrgDiagram): string[] {
   return [
@@ -13,7 +13,10 @@ export function journeyTeamOrder(d: OrgDiagram): string[] {
     ]),
   ];
 }
-export async function layoutOrg(d: OrgDiagram): Promise<Layout> {
+export async function layoutOrg(
+  d: OrgDiagram,
+  options: { annotate?: boolean } = {},
+): Promise<Layout> {
   const order = journeyTeamOrder(d),
     teams = order.map((id) => d.teams.find((t) => t.id === id)!);
   const stages: JourneyStage[] = d.journey.map((stage, i) => {
@@ -45,54 +48,78 @@ export async function layoutOrg(d: OrgDiagram): Promise<Layout> {
       pills,
     };
   });
-  const contentTop = Math.max(64, ...stages.map((s) => s.y + s.height + 32));
-  const elk = new ELK();
-  const graph: ElkNode = await elk.layout({
-    id: "root",
-    layoutOptions: {
-      "elk.algorithm": "layered",
-      "elk.direction": "RIGHT",
-      "elk.randomSeed": "42",
-      "elk.layered.spacing.nodeNodeBetweenLayers": "96",
-      "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
-    },
-    children: teams.map((t) => ({
-      id: t.id,
+  const contentTop = Math.max(64, ...stages.map((s) => s.y + s.height + 32)),
+    columns = longestLayers(order, d.handoffs),
+    nodes: Layout["nodes"] = [];
+  let rows = 0;
+  const firstStage = (id: string) => {
+    const index = d.journey.findIndex((s) => s.teams.includes(id));
+    return index < 0 ? d.journey.length : index;
+  };
+  for (const team of teams) {
+    const headerHeight =
+      team.owner?.trim() ||
+      (options.annotate && (team.type === "team" || team.type === "agent"))
+        ? 80
+        : 56;
+    const height =
+      headerHeight +
+      (team.processes.length
+        ? 16 +
+          Math.min(team.processes.length, 6) * 26 +
+          (team.processes.length > 6 ? 24 : 0)
+        : 0);
+    nodes.push({
+      id: team.id,
+      x: 0,
+      y: 0,
       width: 264,
-      height: Math.max(
-        80 +
-          (t.processes.length
-            ? 16 +
-              Math.min(t.processes.length, 6) * 26 +
-              (t.processes.length > 6 ? 24 : 0)
-            : 0),
-        d.handoffs.filter((h) => h.from === t.id || h.to === t.id).length * 12 +
-          32,
-      ),
-    })),
-    edges: d.handoffs
-      .filter(
-        (h) =>
-          teams.some((t) => t.id === h.from) &&
-          teams.some((t) => t.id === h.to),
-      )
-      .map((h) => ({ id: h.id, sources: [h.from], targets: [h.to] })),
-  });
-  // ELK determines horizontal layers; explicit rows preserve journey reading order.
-  let y = contentTop + 32;
-  const nodes = teams.map((t) => {
-    const n = graph.children!.find((n) => n.id === t.id)!;
-    const result = {
-      id: t.id,
-      x: Math.round(n.x ?? 0) + 64,
-      y,
-      width: n.width!,
-      height: n.height!,
-    };
-    y += n.height! + 64;
-    return result;
-  });
-  const edges = routeEdges(nodes, d.handoffs, 16, contentTop),
+      height,
+      row: firstStage(team.id),
+      column: columns.get(team.id)!,
+      headerHeight,
+    });
+  }
+  // Size card sides for actual port demand before placing rows and columns.
+  const valid = d.handoffs.filter(
+    (e) =>
+      nodes.some((n) => n.id === e.from) && nodes.some((n) => n.id === e.to),
+  );
+  const needed = portRequirements(nodes, valid, { mode: "column" });
+  for (const n of nodes) {
+    const min = needed.get(n.id)!;
+    n.width = Math.max(n.width, min.width);
+    n.height = Math.max(n.height, min.height);
+  }
+  for (const stage of [...new Set(teams.map((t) => firstStage(t.id)))]) {
+    const used = new Map<number, number>();
+    let groupRows = 0;
+    for (const team of teams.filter((t) => firstStage(t.id) === stage)) {
+      const n = nodes.find((n) => n.id === team.id)!,
+        slot = used.get(n.column!) ?? 0,
+        span = Math.max(1, Math.ceil((n.height + 8) / 160));
+      n.row = rows + slot;
+      n.y = contentTop + n.row * 160 + (span * 160 - n.height) / 2;
+      used.set(n.column!, slot + span);
+      groupRows = Math.max(groupRows, slot + span);
+    }
+    rows += groupRows;
+  }
+  const widths = Array.from(
+    { length: Math.max(0, ...columns.values()) + 1 },
+    (_, i) =>
+      Math.max(264, ...nodes.filter((n) => n.column === i).map((n) => n.width)),
+  );
+  for (const n of nodes)
+    n.x =
+      64 +
+      widths.slice(0, n.column).reduce((sum, w) => sum + w + 144, 0) +
+      (widths[n.column!] - n.width) / 2;
+  const gridHeight = contentTop + Math.max(1, rows) * 160,
+    edges = routeEdges(nodes, d.handoffs, 16, contentTop, {
+      mode: "column",
+      maxY: gridHeight - 8,
+    }),
     width = Math.max(
       480,
       stages.length * 232 + 32,
@@ -104,13 +131,9 @@ export async function layoutOrg(d: OrgDiagram): Promise<Layout> {
     );
   return {
     width,
-    height: Math.max(
-      y,
-      ...edges.flatMap((e) => e.points.map((p) => p.y + 24)),
-      ...edges
-        .filter((e) => e.label)
-        .map((e) => e.label!.y + e.label!.height + 24),
-    ),
+    height: gridHeight,
+    rows,
+    journeyHeight: contentTop,
     nodes,
     edges,
     bands: [],

@@ -17,8 +17,5 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
-  },
-  "dependencies": {
-    "elkjs": "0.10.0"
   }
 }

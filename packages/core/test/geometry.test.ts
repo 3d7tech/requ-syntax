@@ -71,7 +71,7 @@ describe("renderer geometry regressions", () => {
       }
     },
   );
-  it("routes inverse edges on exactly 12px parallel tracks with separate labels", () => {
+  it("routes inverse edges on at least 24px separated tracks with separate labels", () => {
     const nodes: PlacedNode[] = [
       { id: "a", x: 200, y: 100, width: 140, height: 56 },
       { id: "b", x: 500, y: 100, width: 140, height: 56 },
@@ -85,7 +85,7 @@ describe("renderer geometry regressions", () => {
       100,
       40,
     );
-    expect(Math.abs(edges[0].points[0].y - edges[1].points.at(-1)!.y)).toBe(12);
+    expect(Math.abs(edges[0].points[0].y - edges[1].points.at(-1)!.y)).toBe(24);
     expect(edges[0].points).toHaveLength(2);
     expect(edges[1].points).toHaveLength(2);
     expect(overlap(edges[0].label!, edges[1].label!)).toBe(false);
@@ -127,9 +127,10 @@ describe("renderer geometry regressions", () => {
   });
   it("spreads multiple ports on a side evenly", () => {
     const nodes: PlacedNode[] = [
-      { id: "a", x: 100, y: 200, width: 140, height: 80 },
+      { id: "a", x: 100, y: 200, width: 140, height: 80, row: 0 },
       ...[100, 210, 320].map((y, i) => ({
         id: "b" + i,
+        row: 0,
         x: 600,
         y,
         width: 140,
@@ -265,10 +266,10 @@ it("matches an annotated org golden SVG", async () => {
   );
 });
 
-it("keeps bent inverse routes 12px apart on both axes", () => {
+it("uses top/bottom for reverse edges across rows", () => {
   const nodes: PlacedNode[] = [
-      { id: "a", x: 200, y: 100, width: 140, height: 56 },
-      { id: "b", x: 500, y: 300, width: 140, height: 56 },
+      { id: "a", x: 200, y: 100, width: 140, height: 80, row: 0 },
+      { id: "b", x: 500, y: 300, width: 140, height: 80, row: 1 },
     ],
     edges = routeEdges(
       nodes,
@@ -276,15 +277,10 @@ it("keeps bent inverse routes 12px apart on both axes", () => {
       100,
       40,
     );
-  const a = parts(edges[0].points),
-    b = parts([...edges[1].points].reverse());
-  expect(a.length).toBe(b.length);
-  expect(a.length).toBeGreaterThan(1);
-  for (let i = 0; i < a.length; i++) {
-    if (a[i][0].x === a[i][1].x)
-      expect(Math.abs(a[i][0].x - b[i][0].x)).toBe(12);
-    else expect(Math.abs(a[i][0].y - b[i][0].y)).toBe(12);
-  }
+  expect(edges[0].source.side).toBe("bottom");
+  expect(edges[0].target.side).toBe("top");
+  expect(edges[1].source.side).toBe("top");
+  expect(edges[1].target.side).toBe("bottom");
   assertNoSharedSegments({ nodes, edges, bands: [], width: 800, height: 600 });
 });
 it("preserves paired tracks when a decision uses a different exit for its second branch", () => {

@@ -15,6 +15,9 @@ export interface PlacedNode extends Box {
   id: string;
   lane?: string;
   diamond?: boolean;
+  row?: number;
+  column?: number;
+  headerHeight?: number;
 }
 export interface PlacedLabel extends Box {
   lines: string[];
@@ -47,4 +50,6 @@ export interface Layout {
   edges: PlacedEdge[];
   bands: Band[];
   stages?: JourneyStage[];
+  rows?: number;
+  journeyHeight?: number;
 }

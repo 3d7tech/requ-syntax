@@ -51,11 +51,7 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/core:
-    dependencies:
-      elkjs:
-        specifier: 0.10.0
-        version: 0.10.0
+  packages/core: {}
 
   packages/web:
     dependencies:
@@ -818,9 +814,6 @@ packages:
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
-
-  elkjs@0.10.0:
-    resolution: {integrity: sha512-v/3r+3Bl2NMrWmVoRTMBtHtWvRISTix/s9EfnsfEWApNrsmNjqgqJOispCGg46BPwIFdkag3N/HYSxJczvCm6w==}
 
   es-module-lexer@1.7.0:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
@@ -2032,8 +2025,6 @@ snapshots:
   deep-eql@5.0.2: {}
 
   deep-is@0.1.4: {}
-
-  elkjs@0.10.0: {}
 
   es-module-lexer@1.7.0: {}
 

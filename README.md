@@ -60,9 +60,11 @@ Components rerender on source, theme or diagram changes and emit bubbling `requ-
 
 `render(source, {annotate: true})` adds muted italic “No owner” to org teams/agents with R001. Default is false. The CLI accepts `--annotate`; browser auto-render accepts `{annotate:true}` and the component uses an `annotate` attribute.
 
-Process edges use directional, spaced ports; inverse edges use parallel tracks 12px apart. Decision exits use different sides. Lanes use content height plus 32px, minimum 96px. Diamonds grow around their labels with 8px padding.
+Both renderers use one grid-based port plan. Process edges face the target lane: top for above, bottom for below, right/left within a lane. Org handoffs use right/left across columns and top/bottom within a column. Ports on the same side are at least 24px apart. Decision branches leave from different sides; same-lane continuation keeps right. Routing prefers fewer bends and enforces 8px clearance between edge segments.
 
-Org journey stages show wrapping team-name pills. Cards read from top to bottom in first journey-appearance order; absent teams go last. Team colours use 4px left accents; empty process sections are hidden.
+Cross-lane reverse pairs share a process column and use straight vertical tracks at −16px/+16px from centre, with separate labels on the outer sides. Following steps use the next layer. Process labels stay within their lane and within 16px of their own segment. Lanes retain content-based height and task boxes only grow for actual port demand.
+
+Org columns use longest-path layers over handoffs, with DFS back edges omitted only during layer assignment. Every handoff still renders. Rows group teams by their first journey stage; absent teams follow. Same-cell collisions and unusually tall cards reserve additional 160px grid rows. Team-name pills wrap, empty process sections stay hidden and missing owner lines collapse unless annotation is enabled. Core no longer needs ELK or any other runtime dependency.
 
 ## Language and limits
 
