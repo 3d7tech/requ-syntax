@@ -73,7 +73,7 @@ importers:
   packages/cli:
     dependencies:
       '@requstory/core':
-        specifier: workspace:*
+        specifier: workspace:^0.1.1
         version: link:../core
 
   packages/core: {}
@@ -81,7 +81,7 @@ importers:
   packages/web:
     dependencies:
       '@requstory/core':
-        specifier: workspace:*
+        specifier: workspace:^0.1.1
         version: link:../core
 
 packages:

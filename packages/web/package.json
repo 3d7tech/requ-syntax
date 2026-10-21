@@ -1,6 +1,6 @@
 {
   "name": "@requstory/web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -19,7 +19,7 @@
     }
   },
   "dependencies": {
-    "@requstory/core": "workspace:*"
+    "@requstory/core": "workspace:^0.1.1"
   },
   "unpkg": "./dist/requ.global.js",
   "jsdelivr": "./dist/requ.global.js",

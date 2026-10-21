@@ -43,12 +43,18 @@ jobs:
       - run: pnpm build
       - run: pnpm test
       - run: pnpm lint
+      - name: Pack release tarballs
+        run: |
+          mkdir -p /tmp/requ-packages
+          pnpm --filter @requstory/core pack --pack-destination /tmp/requ-packages
+          pnpm --filter @requstory/cli pack --pack-destination /tmp/requ-packages
+          pnpm --filter @requstory/web pack --pack-destination /tmp/requ-packages
       - name: Stage public packages in dependency order
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           test -n "$NODE_AUTH_TOKEN"
           npm whoami
-          (cd packages/core && npm stage publish --access public)
-          (cd packages/cli && npm stage publish --access public)
-          (cd packages/web && npm stage publish --access public)
+          npm stage publish /tmp/requ-packages/requstory-core-*.tgz --access public
+          npm stage publish /tmp/requ-packages/requstory-cli-*.tgz --access public
+          npm stage publish /tmp/requ-packages/requstory-web-*.tgz --access public
