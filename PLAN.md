@@ -1,6 +1,6 @@
 # Requ syntax — proposed build plan
 
-Status: approved 21 October 2026. Implementation in progress.
+Status: approved 21 October 2026. Milestones 1–7 implemented and locally validated; completed-build release review pending.
 
 ## Goal
 
@@ -66,12 +66,12 @@ No PNG, hosted render API, MCP server, Mermaid compiler, editor/Markdown plugins
 - Playground URL: `https://requstory.com/dev`, chosen to support the main site’s SEO. Keep source in the separate requ-syntax repository. Build assets with `/dev/` as the base, and test direct loads, asset URLs and compressed hash links there. Include crawlable introductory content, canonical metadata and links to the language guide. SEO benefit is a goal, not a guaranteed result. Route/static hosting integration must preserve existing Requstory routes and use GitHub Actions.
 - JSON export: later. Keep existing exports unchanged in the MVP; design and test a lossless adapter before integration.
 
-These three choices are settled. Overall build and proposed technical decisions approved 21 October 2026. Playground UI mockups still require review.
+These three choices are settled. Overall build and proposed technical decisions approved 21 October 2026. Playground UI mockups approved 21 October; the completed build now awaits release review.
 
 ## Release details still open
 
 - GitHub repository confirmed: https://github.com/3d7tech/requ-syntax (main).
-- Confirm how the separate repo’s static artifact joins the current GitHub Actions release at /dev before deployment.
+- Reviewed CI artifact is bundled through FE PR #189 and staged into the existing paired Actions release at /dev; see DEPLOYMENT.md.
 - Package publishing and live deployment follow a review of the completed build; planning approval alone does not publish packages.
 
 ## Latest approved renderer change

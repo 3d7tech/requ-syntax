@@ -16,4 +16,8 @@ Phone/desktop mockups approved 21 October 2026. Vite/CodeMirror UI now includes 
 
 Validation: 173 unit/integration tests; build, lint and strict types; ESM/IIFE embeds; all ten SVG text/padding checks; playground browser checks at 1440/390/320px including all nine examples, sub-diagram selection, annotation, zoom, source edits, diagnostic focus, share reload/recovery, clipboard/downloads, escaping and /dev asset paths. npm tarballs are prepared for inspection; publication is gated on completed-build review, scope access and an Actions release tag.
 
-Remote: https://github.com/3d7tech/requ-syntax (main). npm is not signed in locally, so @requstory access remains unverified. No npm publication or production deployment. The frontend release integration is being prepared on a separate branch using the checked static artifact; no app features or original spec changed.
+Remote: https://github.com/3d7tech/requ-syntax (main). npm is not signed in locally, so @requstory access remains unverified. No npm publication or production deployment. Passing source CI: https://github.com/3d7tech/requ-syntax/actions/runs/39573360078 at 9b8b13bad36bbf784c4433d55272994777fa766b. Packed core/CLI/web install and render in a clean consumer.
+
+Frontend release integration is ready in draft PR https://github.com/3d7tech/requstoryFE/pull/189. It bundles the unchanged CI artifact at rebuild/playground-release and stages it with the existing page backup/rollback manifest, sitemap and llms.txt. Local FE formatting/types, 91 tests and build pass; the full playground browser suite also passes against the integrated build. Main app JS remains index-DrfYHVOf.js. PR CI is being checked. No app features or original spec changed.
+
+Review locally with pnpm --filter @requstory/playground preview --port 5178, then open http://127.0.0.1:5178/dev/. Completed-build review is required before the paired production Actions release or npm publishing.

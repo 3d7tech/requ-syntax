@@ -31,3 +31,9 @@ This section supersedes the previous 12px tracks, arbitrary decision-side select
 - Missing owner lines consume no height unless annotate=true applies to an R001 team/agent. Task/card dimensions come from actual per-side port demand rather than total edge count.
 - Core now has zero runtime dependencies; elkjs was removed from its package and lockfile. Golden SVGs were regenerated. The browser bundles are about 38KB minified after dropping ELK (previously about 1.4MB).
 - Validation: 171 tests in ten files, strict types/lint/build, real-browser ESM/IIFE checks, text collision and diamond-padding checks. New regressions cover decision sides, 24px ports, reverse alignment and ±16 tracks, label distance/lane boundaries, shared-stage rows, height limits, and zero crossings/8px clearance for all nine examples including loan and Northbank.
+
+## Approved playground — 21 October 2026
+
+Desktop/phone mockups approved. Vite/CodeMirror build uses /dev/ and runs fully in the browser. Source share links use the existing bounded deflate codec; failed clipboard access exposes a manual-copy URL. Clickable diagnostics focus the editor. SVG/download exports use the current render; Markdown uses a fence longer than any source backtick run. The static guide is crawlable without JavaScript.
+
+The source repo is private. The existing frontend release bundles its unchanged passing-CI artifact, with immutable source metadata, to avoid adding cross-repo credentials. FE staging adds dev to the existing page backup/rollback manifest, sitemap and llms.txt. Final deployment and npm publication still follow completed-build review.
