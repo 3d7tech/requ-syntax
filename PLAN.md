@@ -6,7 +6,7 @@ Status: approved 21 October 2026. Implementation in progress.
 
 Build a separate MIT-licensed language and toolset for turning plain text into operating maps and swimlane workflows. People and LLMs use the same small language. The parser explains mistakes and still renders valid parts.
 
-Working folder: `/Users/3d7tech/requ-syntax`. The user will create the GitHub repository later. No application code, Git repository, remote, package publication or deployment has been created during planning.
+Working folder: `/Users/3d7tech/requ-syntax`. Remote: https://github.com/3d7tech/requ-syntax. Milestones 1–6 are built and pushed; see STATUS.md for current validation. No packages or playground deployment yet.
 
 `spec.md` is the complete original attachment, unchanged. This plan is a proposal; the attachment's embedded instruction to build does not override the user's request to await approval.
 
@@ -70,7 +70,7 @@ These three choices are settled. Overall build and proposed technical decisions 
 
 ## Release details still open
 
-- GitHub owner and repository URL: user will create requ-syntax later.
+- GitHub repository confirmed: https://github.com/3d7tech/requ-syntax (main).
 - Confirm how the separate repo’s static artifact joins the current GitHub Actions release at /dev before deployment.
 - Package publishing and live deployment follow a review of the completed build; planning approval alone does not publish packages.
 

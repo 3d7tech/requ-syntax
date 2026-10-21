@@ -13,9 +13,10 @@ export function stepSize(
       Math.ceil(
         Math.max(
           72,
-          Math.max(...lines.map((t) => measure(t, 12))) +
-            lines.length * 16 +
-            32,
+          // Leave room for wider system-font metrics on Linux and Windows.
+          Math.max(...lines.map((t) => measure(t, 12))) * 1.2 +
+            lines.length * 20 +
+            40,
         ) / 2,
       ) * 2;
     return { width: size, height: size };

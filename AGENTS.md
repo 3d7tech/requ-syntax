@@ -9,4 +9,4 @@ Run pnpm build, pnpm test and pnpm lint before each milestone commit.
 Use M<n>: <name> commit messages. No paid calls. Never read secrets.
 Keep parser/render nonthrowing, output deterministic, and SVG escaped.
 Phone/desktop playground mockups need approval before UI implementation.
-Publish/deploy only after review, through GitHub Actions. User will create remote later.
+Publish/deploy only after review, through GitHub Actions. Remote: https://github.com/3d7tech/requ-syntax (main).

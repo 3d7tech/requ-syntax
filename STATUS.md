@@ -14,4 +14,8 @@ Validation: 171 tests across ten files pass; build, lint and strict TypeScript p
 
 Nine examples, gallery, README, llms.txt and compressed share-link logic are ready. Playground UI mockups still need to be shown and approved before Vite/CodeMirror UI work. The current playground package contains share-link logic only; its build checks TypeScript. Full playground implementation and /dev artifact remain unfinished.
 
-No remote, package publication or deployment. User will create requ-syntax on GitHub later. Current Requstory application and original spec.md are unchanged.
+Remote connected: https://github.com/3d7tech/requ-syntax (main). Initial tested build pushed on 21 October. First Linux CI run found wider system-font metrics in decision labels; decision sizing now reserves extra font room, and three snapshots were updated. Local build, 171 tests, lint and browser checks pass again. CI rerun pending.
+
+Phone/desktop mockups prepared for approval at `/Users/3d7tech/.codex/visualizations/2026/10/21/01a15d26-4546-7152-84fc-e0cb994e40f1/requ-playground.html`; input and phone view switching checked at 1024/390/320px. Full CodeMirror UI remains gated on that review.
+
+npm access check: this machine is not signed in; unauthenticated org lookup returns scope not found. Publishing rights remain unverified (this does not establish scope availability). No packages published and no live deployment. Current Requstory application and original spec.md are unchanged.
