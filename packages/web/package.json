@@ -10,15 +10,17 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean"
+    "build": "tsup"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/requ.d.ts",
+      "import": "./dist/requ.esm.js"
     }
   },
   "dependencies": {
     "@requstory/core": "workspace:*"
-  }
+  },
+  "unpkg": "./dist/requ.global.js",
+  "jsdelivr": "./dist/requ.global.js"
 }

@@ -1,5 +1,7 @@
 import { URL } from "node:url";
-import { chromium } from "/Users/3d7tech/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
+const { chromium } = await import(
+  process.env.PLAYWRIGHT_MODULE ?? "@playwright/test"
+);
 import { readFile, mkdir } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 await mkdir(new URL("output/", root), { recursive: true });
