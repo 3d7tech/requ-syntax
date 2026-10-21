@@ -20,6 +20,10 @@ describe("playground release staging", () => {
         '<script src="/dev/assets/test.js"></script>',
       );
       await writeFile(join(build, "guide.html"), "Guide");
+      await writeFile(
+        join(build, "sitemap.xml"),
+        "<urlset><url><loc>https://requstory.com/dev/examples/loan-application/</loc></url></urlset>",
+      );
       await writeFile(join(frontend, "index.html"), "Existing app");
       await writeFile(join(frontend, "site-pages.json"), '["pricing"]');
       await writeFile(
@@ -37,6 +41,12 @@ describe("playground release staging", () => {
       );
       expect(await readFile(join(frontend, "dev/guide.html"), "utf8")).toBe(
         "Guide",
+      );
+      expect(await readFile(join(frontend, "sitemap.xml"), "utf8")).toContain(
+        "https://requstory.com/dev/examples/loan-application/",
+      );
+      expect(await readFile(join(frontend, "llms.txt"), "utf8")).toContain(
+        "https://requstory.com/dev/llms-full.txt",
       );
     } finally {
       await rm(root, { recursive: true, force: true });

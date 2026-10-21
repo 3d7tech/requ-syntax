@@ -35,11 +35,21 @@ async function optionalFile(name) {
   }
 }
 let sitemap = await optionalFile("sitemap.xml");
+let exampleUrls = [];
+try {
+  const built = await readFile(resolve(build, "sitemap.xml"), "utf8");
+  exampleUrls = [
+    ...built.matchAll(/<loc>(https:\/\/requstory\.com\/dev\/[^<]*)<\/loc>/g),
+  ].map((match) => match[1]);
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
 if (sitemap !== null) {
-  for (const url of [
+  for (const url of new Set([
     "https://requstory.com/dev/",
     "https://requstory.com/dev/guide.html",
-  ])
+    ...exampleUrls,
+  ]))
     if (!sitemap.includes(`<loc>${url}</loc>`))
       sitemap = sitemap.replace(
         "</urlset>",
@@ -48,9 +58,17 @@ if (sitemap !== null) {
   await writeFile(resolve(frontend, "sitemap.xml"), sitemap);
 }
 const llms = await optionalFile("llms.txt");
-if (llms !== null && !llms.includes("https://requstory.com/dev/"))
-  await writeFile(
-    resolve(frontend, "llms.txt"),
-    llms.trimEnd() +
-      "\n\nRequ syntax playground: https://requstory.com/dev/\nLanguage guide: https://requstory.com/dev/guide.html\n",
-  );
+if (llms !== null) {
+  const entries = [
+    "Requ syntax playground: https://requstory.com/dev/",
+    "Language guide: https://requstory.com/dev/guide.html",
+    "Requ LLM reference: https://requstory.com/dev/llms.txt",
+    "Complete Requ guide and example source: https://requstory.com/dev/llms-full.txt",
+    "Static Requ examples: https://requstory.com/dev/examples/",
+  ].filter((entry) => !llms.includes(entry));
+  if (entries.length)
+    await writeFile(
+      resolve(frontend, "llms.txt"),
+      llms.trimEnd() + "\n\n" + entries.join("\n") + "\n",
+    );
+}

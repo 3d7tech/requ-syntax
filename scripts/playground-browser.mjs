@@ -25,7 +25,10 @@ const server = createServer(async (req, res) => {
     if (!url.pathname.startsWith("/dev/")) throw Error("Outside playground");
     const path = resolve(
       root,
-      decodeURIComponent(url.pathname.slice(5) || "index.html"),
+      decodeURIComponent(
+        url.pathname.slice(5) +
+          (url.pathname.endsWith("/") ? "index.html" : ""),
+      ),
     );
     if (!path.startsWith(root + "/")) throw Error("Outside build");
     res.setHeader(
@@ -35,6 +38,9 @@ const server = createServer(async (req, res) => {
         ".css": "text/css",
         ".html": "text/html",
         ".md": "text/plain",
+        ".txt": "text/plain",
+        ".svg": "image/svg+xml",
+        ".requ": "text/plain",
       }[extname(path)] ?? "application/octet-stream",
     );
     res.end(await readFile(path));
@@ -164,7 +170,8 @@ try {
   await page.getByRole("button", { name: "Share", exact: true }).click();
   await page.getByText("Share link copied.", { exact: true }).waitFor();
   const share = await page.evaluate(() => window.testClipboard);
-  assert.ok(share.includes("/dev/#r="));
+  assert.equal(new URL(share).pathname, "/dev/");
+  assert.ok(new URL(share).hash.startsWith("#r="));
   await page.goto(share);
   await wait();
   assert.equal(await title(), "Latest edit");
@@ -211,10 +218,75 @@ try {
   assert.ok(
     (await page.locator("#action-status").textContent()).includes("invalid"),
   );
-  assert.equal(await title(), "Latest edit");
+  assert.equal(await title(), "Support triage");
   await edit('process x "<script>alert(1)</script>"');
   assert.equal(await page.locator("#preview script").count(), 0);
   assert.equal(await title(), "<script>alert(1)</script>");
+  await page.goto(base + "?example=loan-application");
+  await wait();
+  assert.equal(await title(), "Retail loan application");
+  await page.getByRole("button", { name: "Copy for AI", exact: true }).click();
+  await page
+    .getByText("AI prompt and language guide copied.", { exact: true })
+    .waitFor();
+  assert.ok(
+    (await page.evaluate(() => window.testClipboard)).includes(
+      "# Requ language guide",
+    ),
+  );
+  await page.locator("#exports summary").click();
+  assert.equal(
+    await page
+      .getByRole("link", { name: "Open in Requstory (new tab)" })
+      .getAttribute("href"),
+    "/?from=requ-syntax",
+  );
+  assert.ok(
+    (await page.locator("#annotate").locator("..").textContent()).includes(
+      "Show gaps",
+    ),
+  );
+  const staticContext = await browser.newContext({
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 950 },
+  });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto(base);
+  assert.ok(await staticPage.locator(".static-examples svg").count());
+  assert.equal(
+    await staticPage.getByText("Loading examples…", { exact: true }).count(),
+    0,
+  );
+  await staticPage.goto(base + "guide.html");
+  assert.ok(await staticPage.locator("table").count());
+  assert.equal(
+    await staticPage
+      .getByRole("link", { name: "Open in playground", exact: true })
+      .count(),
+    2,
+  );
+  assert.ok(
+    !(await staticPage.locator("body").textContent()).includes(
+      "MVP acceptance",
+    ),
+  );
+  for (const id of examples) {
+    await staticPage.goto(base + `examples/${id}/`);
+    assert.ok(await staticPage.locator("svg").count());
+    assert.ok(await staticPage.locator("code.language-requ").textContent());
+  }
+  await staticPage.goto(base + "examples/loan-application/");
+  await staticPage.screenshot({
+    path: resolve(screenshots, "static-loan-390.png"),
+    fullPage: true,
+  });
+  await staticPage.setViewportSize({ width: 1440, height: 1000 });
+  await staticPage.goto(base + "guide.html");
+  await staticPage.screenshot({
+    path: resolve(screenshots, "static-guide-1440.png"),
+    fullPage: true,
+  });
+  await staticContext.close();
   await page.goto(base + "guide.html");
   assert.equal(
     await page.getByRole("heading", { name: "Requ language guide" }).count(),

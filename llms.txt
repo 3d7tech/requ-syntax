@@ -1,49 +1,23 @@
-# Requ syntax v0.1
+# Requ syntax
 
-Requ turns one statement per line into SVG workflow or operating-map diagrams.
-Packages use @requstory. Language: LANGUAGE.md. Full brief: spec.md.
-process <id> "Title" starts a workflow. lane <id> "Label" type=customer|team|agent|external owner="Name" declares an actor. <lane>.<step>: "Label" start|end|decision|wait declares a step. a -> b : "Label" links steps. An org uses team, process <team> "Label", handoff and stage statements. Quote labels; # starts a comment outside quotes. basis=suggested marks unconfirmed content. Diagnostics explain errors with source locations and repair hints. Review model warnings; they do not prove a real operational failure.
+> An open-source language for swimlane workflows and operating maps.
 
-Examples:
+Requ uses one statement per line. Use the language guide to write valid source. Diagrams and source are readable without JavaScript. Requstory import/export is not available yet.
 
-```requ
-process refund "Customer refund"
-lane customer "Customer" type=customer
-lane support "Support" owner="Support lead"
-customer.request: "Request a refund" start
-support.review: "Review the request"
-customer.receive: "Receive refund" end
-request -> review -> receive
-```
+## Documentation
+- [Playground](https://requstory.com/dev/): editor, diagnostics and SVG export.
+- [Language guide](https://requstory.com/dev/guide.html): complete syntax and examples.
+- [Plain-text language guide](https://requstory.com/dev/LANGUAGE.md)
+- [Full LLM reference](https://requstory.com/dev/llms-full.txt): guide and all example source.
+- [Source repository](https://github.com/3d7tech/requ-syntax)
 
-```requ
-process invoice "Invoice approval"
-lane supplier "Supplier" type=external
-lane agent "Invoice agent" type=agent
-lane finance "Finance" owner="Finance lead"
-supplier.send: "Submit invoice" start
-agent.extract: "Extract invoice details" system="Accounting system"
-finance.check: "Invoice valid?" decision
-finance.pay: "Approve payment" end
-finance.return: "Return for correction" end
-send -> extract -> check
-check -> pay : "yes"
-check -> return : "no"
-```
-
-```requ
-org "Example SaaS company"
-team growth "Growth" owner="Growth lead"
-team product "Product" owner="Product lead"
-team support "Support" owner="Support lead"
-process growth "Attract customers"
-process product "Deliver the service"
-process support "Resolve issues"
-handoff growth -> product : "New customer"
-handoff product -> support : "Customer context"
-handoff support -> product : "Product feedback"
-stage "Discover" : growth
-stage "Use" : product
-stage "Get help" : support, product
-```
-
+## Examples
+- [Bank account opening](https://requstory.com/dev/examples/bank-account-opening/): static SVG and complete Requ source.
+- [Customer refund](https://requstory.com/dev/examples/customer-refund/): static SVG and complete Requ source.
+- [Employee onboarding](https://requstory.com/dev/examples/employee-onboarding/): static SVG and complete Requ source.
+- [Broken example](https://requstory.com/dev/examples/errors-demo/): static SVG and complete Requ source.
+- [Invoice approval](https://requstory.com/dev/examples/invoice-approval-with-agent/): static SVG and complete Requ source.
+- [Retail loan application](https://requstory.com/dev/examples/loan-application/): static SVG and complete Requ source.
+- [Northbank Retail](https://requstory.com/dev/examples/northbank-org/): static SVG and complete Requ source.
+- [Example SaaS company](https://requstory.com/dev/examples/saas-company-org/): static SVG and complete Requ source.
+- [Support triage](https://requstory.com/dev/examples/support-triage-agent/): static SVG and complete Requ source.

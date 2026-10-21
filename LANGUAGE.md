@@ -1,8 +1,10 @@
-## 2. Language spec v0.1
+# Requ language guide
+
+Language version 0.1.
 
 Requ is line-based: one statement per line, indentation ignored, `#` starts a comment. This keeps it robust when an LLM gets whitespace wrong. A file holds one or more diagrams; each starts with a `process` or `org` header line.
 
-### Lexical rules
+## Lexical rules
 
 - **Identifiers:** `[a-z][a-z0-9_]*`. Case-insensitive on input, normalised to lowercase.
 - **Labels:** double-quoted strings, with `\"` as the escape. A bare word after an id is also accepted as a label.
@@ -12,7 +14,7 @@ Requ is line-based: one statement per line, indentation ignored, `#` starts a co
 - **Optional version line:** `requ 0.1` as the first line.
 - **Markdown fence language:** `requ`.
 
-### Shared attributes
+## Shared attributes
 
 | Attribute | Applies to | Values | Rendering |
 | --- | --- | --- | --- |
@@ -22,9 +24,9 @@ Requ is line-based: one statement per line, indentation ignored, `#` starts a co
 | `note` | any element | quoted text | Tooltip (`<title>`) in SVG |
 | `system` | step | quoted name, e.g. `"Salesforce"` | Small tag under the step label |
 
-The `basis` values match Requstory's provenance labels, so maps round-trip without losing whether a line came from the website or was confirmed by the team.
+The `basis` attribute records provenance within Requ. Requstory import/export is not available yet.
 
-### Process diagrams (swimlane workflow)
+## Process diagrams (swimlane workflow)
 
 | Statement | Syntax | Meaning |
 | --- | --- | --- |
@@ -35,7 +37,7 @@ The `basis` values match Requstory's provenance labels, so maps round-trip witho
 
 Step kinds (a bare keyword after the label): `task` (default), `start`, `end`, `decision`, `wait`. A step can point to a sub-process with `sub=<processId>`; sub-processes may nest up to 5 levels.
 
-Example — the MVP acceptance diagram:
+### Retail loan application
 
 ```requ
 requ 0.1
@@ -72,7 +74,7 @@ collect -> verify -> record
 
 Step ids are unique within a process, so flows reference steps without the lane prefix. A lane id reused across processes refers to the same actor.
 
-### Org diagrams (operating map)
+## Org diagrams (operating map)
 
 | Statement | Syntax | Meaning |
 | --- | --- | --- |
@@ -82,7 +84,7 @@ Step ids are unique within a process, so flows reference steps without the lane 
 | Handoff | `handoff <teamId> -> <teamId> : "what is handed over"` | Work moving between teams. |
 | Journey stage | `stage "<label>" : <teamId>, <teamId>` | A customer-journey stage and the teams that touch it. Order of declaration = journey order. |
 
-Example:
+### Northbank Retail
 
 ```requ
 org "Northbank Retail"
@@ -110,7 +112,7 @@ stage "Get funds" : ops
 stage "Get help" : assist, support
 ```
 
-### Leniency rules (important for LLM output)
+## Leniency rules (important for LLM output)
 
 - Accept `-->`, `=>` and `→` as `->`, with an info diagnostic.
 - Accept single quotes and smart quotes as label delimiters.

@@ -1,19 +1,28 @@
 import { defineConfig } from "vite";
-import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { staticSite } from "./src/static-site";
 
-const escape = (value: string) =>
-  value.replace(
-    /[&<>]/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!,
-  );
 export default defineConfig({
   base: "/dev/",
   build: { target: "es2022" },
   plugins: [
     {
-      name: "requ-language-guide",
-      generateBundle() {
+      name: "requ-public-documentation",
+      async transformIndexHtml(html) {
+        const { examples, landing } = await staticSite();
+        return html
+          .replace(
+            "<option>Loading examples…</option>",
+            examples
+              .map(
+                (e) =>
+                  `<option value="${e.id}">${e.title.replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</option>`,
+              )
+              .join(""),
+          )
+          .replace("<!-- static-examples -->", landing);
+      },
+      async generateBundle() {
         this.emitFile({
           type: "asset",
           fileName: "release.json",
@@ -26,20 +35,9 @@ export default defineConfig({
               }).trim(),
           }),
         });
-        const language = readFileSync(
-          new URL("../../LANGUAGE.md", import.meta.url),
-          "utf8",
-        );
-        this.emitFile({
-          type: "asset",
-          fileName: "guide.html",
-          source: `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Requ language guide | Requstory</title><link rel="canonical" href="https://requstory.com/dev/guide.html"><style>html{color-scheme:light dark}body{font:16px/1.6 system-ui,sans-serif;max-width:900px;margin:32px auto;padding:0 20px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.7 ui-monospace,monospace}a{color:light-dark(#246958,#8dd9c0)}</style><a href="./">← Playground</a><h1>Requ language guide</h1><pre>${escape(language)}</pre></html>`,
-        });
-        this.emitFile({
-          type: "asset",
-          fileName: "LANGUAGE.md",
-          source: language,
-        });
+        const { files } = await staticSite();
+        for (const [fileName, source] of files)
+          this.emitFile({ type: "asset", fileName, source });
       },
     },
   ],

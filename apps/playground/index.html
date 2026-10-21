@@ -48,12 +48,21 @@
           </select></label
         >
         <button id="share" class="primary" type="button">Share</button>
+        <button id="copy-ai" type="button">Copy for AI</button>
         <details id="exports">
           <summary>Export</summary>
           <div class="export-menu">
             <button type="button" id="copy-svg">Copy SVG</button
             ><button type="button" id="download-svg">Download SVG</button
             ><button type="button" id="copy-markdown">Copy Markdown</button>
+            <a
+              class="requstory-action"
+              href="/?from=requ-syntax"
+              target="_blank"
+              rel="noopener"
+              aria-label="Open in Requstory (new tab)"
+              >Open in Requstory</a
+            >
           </div>
         </details>
       </div>
@@ -66,6 +75,10 @@
           Close
         </button>
       </div>
+      <details id="ai-fallback" hidden>
+        <summary>Copy this AI prompt</summary>
+        <textarea id="ai-prompt" aria-label="AI prompt" readonly></textarea>
+      </details>
       <p id="action-status" role="status" aria-live="polite"></p>
       <div class="view-tabs" role="group" aria-label="Workspace view">
         <button
@@ -96,8 +109,7 @@
           <div class="pane-heading">
             <span>Preview</span>
             <div class="preview-controls">
-              <label
-                ><input type="checkbox" id="annotate" /> No owner notes</label
+              <label><input type="checkbox" id="annotate" /> Show gaps</label
               ><button id="zoom" type="button" aria-pressed="false">
                 100%
               </button>
@@ -136,6 +148,7 @@
         >Enable JavaScript to use the editor and renderer. The language guide is
         available without JavaScript.</noscript
       >
+      <!-- static-examples -->
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -2,6 +2,8 @@
 
 Text-to-diagram tools for operating models and swimlane workflows. MIT licensed.
 
+[Try the playground](https://requstory.com/dev/) · [Language guide](https://requstory.com/dev/guide.html) · [Static examples](https://requstory.com/dev/examples/) · [LLM reference](https://requstory.com/dev/llms.txt)
+
 ![Retail loan workflow](examples/__snapshots__/loan-application.svg)
 
 ## Local quick start
