@@ -1,0 +1,10 @@
+process refund "Customer refund"
+lane customer "Customer" type=customer
+lane agent "Refund agent" type=agent
+lane support "Support" owner="Support lead"
+customer.request: "Request a refund" start
+agent.check: "Check refund policy"
+support.approve: "Approve refund"
+customer.receive: "Receive refund" end
+request -> check -> approve : "eligible"
+approve -> receive : "approved"
