@@ -12,12 +12,14 @@ import { layoutProcess } from "../layout/process";
 import type { Box, Layout } from "../layout/types";
 import { wrap } from "../layout/text";
 import { themeCSS } from "./theme";
+import { inlineSVG } from "./inline";
 export interface RenderOptions {
   theme?: "light" | "dark" | "auto";
   diagram?: string;
   showDiagnostics?: boolean;
   maxWidth?: number;
   annotate?: boolean;
+  inlineStyles?: boolean;
 }
 export const esc = (s: string) =>
   s.replace(
@@ -141,7 +143,8 @@ export function svgDocument(
   const banner = errors.length
     ? `<g class="requ-errors"><rect width="${width}" height="${offset}" fill="#fee9e7"/>${errors.map((d, i) => `<text x="16" y="${23 + i * 22}" style="fill:#9f2020;font-size:12px">${esc(wrap(`${d.code}${d.loc ? " line " + d.loc.line : ""}: ${d.message}`, width - 32, 12, 1)[0])}</text>`).join("")}</g>`
     : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" id="${id}" role="img" aria-labelledby="${id}-title" viewBox="0 0 ${width} ${height}" width="${max}" style="max-width:100%;height:auto;background:var(--bg)"><title id="${id}-title">${esc(label)}</title><style>${themeCSS(id, opts.theme ?? "auto")}</style><defs><marker id="${id}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="var(--muted)"/></marker></defs>${banner}<g transform="translate(0 ${offset})">${body}</g></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" id="${id}" role="img" aria-labelledby="${id}-title" viewBox="0 0 ${width} ${height}" width="${max}" style="max-width:100%;height:auto;background:var(--bg)"><title id="${id}-title">${esc(label)}</title><style>${themeCSS(id, opts.theme ?? "auto")}</style><defs><marker id="${id}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="var(--muted)"/></marker></defs>${banner}<g transform="translate(0 ${offset})">${body}</g></svg>`;
+  return opts.inlineStyles ? inlineSVG(svg, opts.theme ?? "auto") : svg;
 }
 export async function render(
   text: string,
@@ -226,7 +229,7 @@ export async function render(
         { width: 640, height: 80 },
         "",
         diagnostics,
-        { showDiagnostics: true },
+        { ...opts, showDiagnostics: true },
       ),
       diagnostics,
     };

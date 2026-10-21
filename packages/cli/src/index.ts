@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     command = args.shift();
   if (command === "--help" || command === "-h" || !command) {
     process.stdout.write(
-      "requ render <file|-> [-o file.svg] [--theme light|dark|auto] [--diagram id] [--json] [--annotate]\nrequ lint <file|->\n",
+      "requ render <file|-> [-o file.svg] [--theme light|dark|auto] [--diagram id] [--json] [--annotate] [--inline-styles]\nrequ lint <file|->\n",
     );
     return;
   }
@@ -30,6 +30,10 @@ async function main(): Promise<void> {
   const opts: RenderOptions = {};
   while (args.length) {
     const a = args.shift()!;
+    if (a === "--inline-styles") {
+      opts.inlineStyles = true;
+      continue;
+    }
     if (a === "--annotate") {
       opts.annotate = true;
       continue;

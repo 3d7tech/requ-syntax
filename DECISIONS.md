@@ -49,3 +49,7 @@ Longest-path ranks already share independent steps. When the spacious grid would
 ## Decision labels — item 3
 
 Diamonds stay between 72 and 96px. Short labels wrap to at most three lines with 8px corner padding. Longer labels use a 72px diamond and text below it; lane content and routing obstacles reserve that text area. External labels have their own class, so browser checks still measure them for collisions while applying diamond containment only to internal text. Port demand cannot enlarge a diamond beyond the cap; crowded ports warn through W008.
+
+## Portable SVG — item 4
+
+`inlineStyles` defaults to false. True resolves the generated styles into explicit SVG attributes with no style block, CSS variables or font requests. Dark is explicit; auto uses light for converters without a colour preference. The SVG includes a painted background and intrinsic scaled height. CLI flag: `--inline-styles`. Future PNG conversion and render services must opt into this mode; neither feature is introduced by this change. All examples/themes and both diagram kinds are covered; light process/dark annotated org exports have separate golden snapshots.

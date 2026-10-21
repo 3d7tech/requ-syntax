@@ -41,3 +41,7 @@ Long grids now compact physical column gaps while preserving predecessor ranks, 
 ## Decision sizing — item 3 complete
 
 Decision diamonds are capped at 96px. Long labels move below a 72px diamond with reserved lane and routing space. Build, 208 tests and lint pass. All eleven golden SVGs pass browser text collision and internal diamond padding checks.
+
+## Portable SVG — item 4 complete
+
+Core inlineStyles and CLI --inline-styles export concrete colours, fonts and strokes without CSS. Auto uses light; dark is supported explicitly. All examples render without E009, every diamond is ≤96px, rating width is 2,500px and its recovered segment-intersection count remains seven (three W008 warnings). The ten-example gallery and golden SVGs are regenerated. CairoSVG produced visible PNGs for all eleven diagrams. Build, 245 unit/integration tests, lint, ESM/IIFE embeds, browser text/padding checks and playground checks at 1440/390/320px pass. Changes are awaiting deployment review; npm still needs a publishing token.

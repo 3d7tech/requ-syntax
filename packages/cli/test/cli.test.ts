@@ -16,6 +16,20 @@ describe("built CLI", () => {
     expect(r.stdout).not.toContain("R010");
     expect(r.stderr).toContain("R010");
   });
+  it("exports attribute-styled SVG for external converters", () => {
+    const r = call([
+      "render",
+      "examples/loan-application.requ",
+      "--inline-styles",
+      "--theme",
+      "dark",
+    ]);
+    expect(r.status).toBe(0);
+    expect(r.stdout).not.toContain("<style");
+    expect(r.stdout).not.toContain("var(");
+    expect(r.stdout).toContain('fill="#121b2b"');
+    expect(r.stdout).toContain('font-family="Inter,system-ui,sans-serif"');
+  });
   it("returns resolved JSON", () => {
     const r = call(["render", "examples/loan-application.requ", "--json"]);
     expect(JSON.parse(r.stdout).diagrams).toHaveLength(2);
@@ -63,6 +77,7 @@ describe("built CLI", () => {
     ["render", "-", "--theme", "wrong"],
     ["render", "-", "--oops"],
     ["lint", "-", "--json"],
+    ["lint", "-", "--inline-styles"],
   ])("rejects invalid invocation %j", (...args) =>
     expect(call(args, "").status).toBe(1),
   );

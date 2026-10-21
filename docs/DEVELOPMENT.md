@@ -65,7 +65,7 @@ Components rerender on source, theme or diagram changes and emit bubbling `requ-
 
 `render(source, {annotate: true})` adds muted italic “No owner” to org teams/agents with R001. Default is false. The CLI accepts `--annotate`; browser auto-render accepts `{annotate:true}` and the component uses an `annotate` attribute.
 
-Both renderers use one grid-based port plan. Process edges face the target lane: top for above, bottom for below, right/left within a lane. Org handoffs use right/left across columns and top/bottom within a column. Ports on the same side are at least 24px apart. Decision branches leave from different sides; same-lane continuation keeps right. Routing prefers fewer bends and enforces 8px clearance between edge segments.
+Both renderers use one grid-based port plan. Process edges face the target lane: top for above, bottom for below, right/left within a lane. Org handoffs use right/left across columns and top/bottom within a column. Ports on the same side are at least 24px apart. Decision branches leave from different sides; same-lane continuation keeps right. Routing prefers fewer bends and starts with 8px clearance between edge segments; difficult routes degrade with W008 as described below.
 
 Cross-lane reverse pairs share a process column and use straight vertical tracks at −16px/+16px from centre, with separate labels on the outer sides. Following steps use the next layer. Process labels stay within their lane and within 16px of their own segment. Lanes retain content-based height and task boxes only grow for actual port demand.
 
@@ -77,7 +77,7 @@ See [LANGUAGE.md](../LANGUAGE.md) for syntax, [spec.md](../spec.md) for the orig
 
 Parsing/rendering returns diagnostics instead of throwing. Limit each file to 100,000 characters and 2,000 statements. Subprocess nesting includes the root and is limited to five levels. Share links additionally cap UTF-8 bytes and decompressed data at 100,000. They keep source in the URL hash; do not share private source unintentionally.
 
-SVG uses deterministic layout, approximate font measurements, inline styles and no external fonts/images. `basis=suggested` is visible as a dashed border and question badge. Warnings never block rendering. Browser embeds namespace SVG ids; raw core SVG stays byte-identical for the same input/options.
+SVG uses deterministic layout, approximate font measurements, scoped CSS by default and no external fonts/images. `basis=suggested` is visible as a dashed border and question badge. Warnings never block rendering. Browser embeds namespace SVG ids; raw core SVG stays byte-identical for the same input/options.
 
 ## Development checks
 
@@ -95,8 +95,20 @@ Browser tests exercise the actual ESM and IIFE bundles. `PLAYWRIGHT_MODULE` can 
 
 ## Playground and release
 
-Live: https://requstory.com/dev/. Run `pnpm dev` to open the CodeMirror playground. It includes all nine examples, live SVG preview, clickable diagnostics, diagram/theme selection, owner annotation, phone Editor/Preview controls, 100%/Fit view, compressed share links, Copy SVG, Download SVG and Copy Markdown. The Vite build is `apps/playground/dist`, with `/dev/` asset paths and a crawlable guide. The playground is live at `/dev/`; the existing app routes are preserved.
+Live: https://requstory.com/dev/. Run `pnpm dev` to open the CodeMirror playground. It includes all ten examples locally (the deployed build still has nine), live SVG preview, clickable diagnostics, diagram/theme selection, owner annotation, phone Editor/Preview controls, 100%/Fit view, compressed share links, Copy SVG, Download SVG and Copy Markdown. The Vite build is `apps/playground/dist`, with `/dev/` asset paths and a crawlable guide. The playground is live at `/dev/`; the existing app routes are preserved.
 
 Deployment uses GitHub Actions and a reviewed CI artifact in the existing paired Requstory release. See [DEPLOYMENT.md](../DEPLOYMENT.md). A manual npm workflow requires a reviewed release tag with passing CI and an NPM_TOKEN in the npm-release environment; scope access must be verified before use. Existing Requstory JSON exports stay unchanged; a lossless adapter comes later.
 
 The public [examples](https://requstory.com/dev/examples/) contain rendered SVG and complete source without JavaScript. The [language guide](https://requstory.com/dev/guide.html) opens each example in the editor. Use **Copy for AI** for a prompt with the full language guide and current source. **Show gaps** adds owner notes; **Open in Requstory** opens the website mapper (source import is deferred). Crawlers can use [llms.txt](https://requstory.com/dev/llms.txt) and the [full reference](https://requstory.com/dev/llms-full.txt).
+
+## SVG for converters and documents
+
+Use `render(source, {inlineStyles: true, theme: "light"})` or:
+
+```sh
+pnpm requ render examples/bond-rating.requ --inline-styles -o rating.svg
+```
+
+`inlineStyles` defaults to false. When enabled, colours, fonts, strokes and dashes are SVG attributes; there is no style block, CSS variable or external dependency. Auto theme uses light colours in this mode; choose dark explicitly for a dark export. PNG conversion and any future rendering service must render with `inlineStyles: true` before handing the SVG to a converter. PNG export and a hosted render service are still deferred.
+
+Routing retries 8px, 4px and 0px clearance, then an elbow, with W008 on degraded edges. Its hint is “Diagram still rendered; consider reordering lanes or steps.” Routing difficulty no longer returns E009. Long grids compact their physical spacing; decisions stay at most 96px, with long labels below a 72px diamond. The supplied sovereign-rating example is `examples/bond-rating.requ`, including the confirmed vote → research feedback edge.
