@@ -526,14 +526,19 @@ function labels(
   for (const edge of edges) {
     const text = connections.find((c) => c.id === edge.id)!.label;
     if (!text) continue;
-    const straight =
-      edge.points.length === 2 && same(edge.points[0].y, edge.points[1].y);
-    const labelWidth = straight
-      ? Math.max(
-          16,
-          Math.min(144, Math.abs(edge.points[1].x - edge.points[0].x) - 24),
-        )
-      : 144;
+    const horizontalSpan = Math.max(
+      0,
+      ...segments(edge.points)
+        .filter(([a, b]) => same(a.y, b.y))
+        .map(([a, b]) => Math.abs(a.x - b.x)),
+    );
+    const verticalSpan =
+      Math.max(...edge.points.map((p) => p.y)) -
+      Math.min(...edge.points.map((p) => p.y));
+    const labelWidth =
+      verticalSpan < 24 && horizontalSpan
+        ? Math.max(16, Math.min(144, horizontalSpan - 24))
+        : 144;
     const lines = wrap(text, labelWidth, 12, 3),
       width = Math.max(...lines.map((t) => measure(t, 12))) + 16,
       height = lines.length * 16 + 8;

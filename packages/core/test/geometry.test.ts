@@ -167,13 +167,15 @@ describe("renderer geometry regressions", () => {
       l.bands[0].y + l.bands[0].height - (l.nodes[1].y + l.nodes[1].height),
     ).toBe(16);
   });
-  it("grows a decision around a long label with padding", () => {
+  it("puts long decision text below a 72px diamond", () => {
     const d = parse(
       'process "X"\nlane a "A"\na.d: "Is the application ready for final approval?" decision',
     ).doc.diagrams[0];
     if (d.kind !== "process") throw Error();
     const n = layoutProcess(d).nodes[0];
-    expect(n.width).toBeGreaterThan(72);
+    expect(n.width).toBe(72);
+    expect(n.externalLabel?.lines.length).toBeLessThanOrEqual(3);
+    expect(n.externalLabel!.y).toBeGreaterThan(n.y + n.height);
     expect(n.height).toBe(n.width);
   });
   it("places the suggestion badge inside its node", async () => {

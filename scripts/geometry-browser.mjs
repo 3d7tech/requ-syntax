@@ -42,7 +42,7 @@ try {
         if (!shape) continue;
         const box = shape.getBBox();
         for (const text of node.querySelectorAll(
-          "text:not(.badge):not(.muted)",
+          "text:not(.badge):not(.muted):not(.requ-external-label)",
         )) {
           const b = text.getBBox();
           for (const x of [b.x - 8, b.x + b.width + 8])

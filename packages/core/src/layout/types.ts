@@ -16,6 +16,9 @@ export interface PlacedNode extends Box {
   id: string;
   lane?: string;
   diamond?: boolean;
+  labelLines?: string[];
+  labelBelow?: boolean;
+  externalLabel?: PlacedLabel;
   row?: number;
   column?: number;
   headerHeight?: number;

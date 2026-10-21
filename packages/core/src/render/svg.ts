@@ -97,7 +97,8 @@ function processMarkup(d: ProcessDiagram, l: Layout, prefix: string): string {
         step.kind === "decision"
           ? `<path class="shape" d="M${b.x + b.width / 2},${b.y}L${b.x + b.width},${b.y + b.height / 2}L${b.x + b.width / 2},${b.y + b.height}L${b.x},${b.y + b.height / 2}Z"/>`
           : `<rect class="shape" x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" rx="${step.kind === "start" || step.kind === "end" ? 28 : step.kind === "wait" ? 16 : 7}"/>`;
-      const lines = wrap(step.label, 122, 12, step.system ? 2 : 3),
+      const lines =
+          b.labelLines ?? wrap(step.label, 122, 12, step.system ? 2 : 3),
         center =
           b.y +
           b.height / 2 +
@@ -108,7 +109,7 @@ function processMarkup(d: ProcessDiagram, l: Layout, prefix: string): string {
       const label = lines
         .map(
           (line, i) =>
-            `<text x="${b.x + b.width / 2}" y="${center - (lines.length - 1) * 8 + i * 16 + 4}" text-anchor="middle" style="font-size:12px">${esc(line)}</text>`,
+            `<text${b.externalLabel ? ' class="requ-external-label"' : ""} x="${b.x + b.width / 2}" y="${b.externalLabel ? b.externalLabel.y + 16 + i * 16 : center - (lines.length - 1) * 8 + i * 16 + 4}" text-anchor="middle" style="font-size:12px">${esc(line)}</text>`,
         )
         .join("");
       const badgeX = b.diamond ? b.x + b.width * 0.75 - 6 : b.x + b.width - 16,

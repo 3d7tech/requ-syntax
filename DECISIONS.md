@@ -45,3 +45,7 @@ Routing difficulty now retries 8px, 4px and 0px edge clearance, then draws an el
 ## Long process spacing — item 2
 
 Longest-path ranks already share independent steps. When the spacious grid would exceed 2,600px, rank centres advance at least 32px and boxes in the same lane retain a 56px gutter. Cross-lane reverse pairs retain one rank/centre. Local connections route first in compact diagrams to avoid blocking them with long feedback edges. The rating regression is 2,599px before the diamond fix; its seven segment intersections do not increase from the item-1 recovery baseline. W008 still marks degraded routing. Smaller examples retain their readable spacing.
+
+## Decision labels — item 3
+
+Diamonds stay between 72 and 96px. Short labels wrap to at most three lines with 8px corner padding. Longer labels use a 72px diamond and text below it; lane content and routing obstacles reserve that text area. External labels have their own class, so browser checks still measure them for collisions while applying diamond containment only to internal text. Port demand cannot enlarge a diamond beyond the cap; crowded ports warn through W008.

@@ -6,20 +6,34 @@ import type { Layout } from "./types";
 export function stepSize(
   step: Step,
   agent = false,
-): { width: number; height: number } {
+): {
+  width: number;
+  height: number;
+  labelLines?: string[];
+  labelBelow?: boolean;
+} {
   const lines = wrap(step.label, 122, 12, step.system ? 2 : 3);
   if (step.kind === "decision") {
-    const size =
-      Math.ceil(
-        Math.max(
-          72,
-          // Leave room for wider system-font metrics on Linux and Windows.
-          Math.max(...lines.map((t) => measure(t, 12))) * 1.2 +
-            lines.length * 20 +
-            40,
-        ) / 2,
-      ) * 2;
-    return { width: size, height: size };
+    const candidates = [32, 40, 48, 56, 64, 72]
+      .map((width) => wrap(step.label, width, 12, Infinity))
+      .filter((lines) => lines.length <= 3);
+    for (let size = 72; size <= 96; size += 2) {
+      const fitting = candidates.find((lines) =>
+        lines.every(
+          (line, i) =>
+            // Include 8px padding at every corner of the text box, with room
+            // for wider system-font metrics and the full font ascent/descent.
+            (measure(line, 12) * 1.2) / 2 +
+              8 +
+              Math.abs(i - (lines.length - 1) / 2) * 16 +
+              8 +
+              8 <=
+            size / 2,
+        ),
+      );
+      if (fitting) return { width: size, height: size, labelLines: fitting };
+    }
+    return { width: 72, height: 72, labelLines: lines, labelBelow: true };
   }
   return {
     width: 140,
@@ -67,10 +81,18 @@ export function layoutProcess(d: ProcessDiagram): Layout {
   for (const n of provisional) {
     const size = sizes.get(n.id)!,
       min = needed.get(n.id)!;
-    size.width = Math.max(size.width, min.width);
-    size.height = Math.max(size.height, min.height);
-    if (n.diamond) size.width = size.height = Math.max(size.width, size.height);
+    if (!n.diamond) {
+      size.width = Math.max(size.width, min.width);
+      size.height = Math.max(size.height, min.height);
+    }
   }
+  const contentHeight = (id: string) => {
+    const size = sizes.get(id)!;
+    return (
+      size.height +
+      (size.labelBelow ? 32 + size.labelLines!.length * 16 + 8 : 0)
+    );
+  };
   const columnWidths = Array.from(
     { length: Math.max(0, ...columns.values()) + 1 },
     (_, i) =>
@@ -145,7 +167,7 @@ export function layoutProcess(d: ProcessDiagram): Layout {
       0,
       ...[...cells.values()].map(
         (cell) =>
-          cell.reduce((sum, s) => sum + sizes.get(s.id)!.height, 0) +
+          cell.reduce((sum, s) => sum + contentHeight(s.id), 0) +
           (cell.length - 1) * 32,
       ),
     );
@@ -164,14 +186,37 @@ export function layoutProcess(d: ProcessDiagram): Layout {
           y: top,
           ...size,
           diamond: s.kind === "decision",
+          ...(size.labelBelow
+            ? {
+                externalLabel: {
+                  x: columnX[column] + columnWidths[column] / 2 - 70,
+                  y: top + size.height + 32,
+                  width: 140,
+                  height: size.labelLines!.length * 16 + 8,
+                  lines: size.labelLines!,
+                },
+              }
+            : {}),
         });
-        top += size.height + 32;
+        top += contentHeight(s.id) + 32;
       }
     }
     y += height;
   }
   const diagnostics: Diagnostic[] = [];
-  const edges = routeEdges(nodes, flows, 176, 48, {
+  const labelObstacles = nodes.flatMap((n) =>
+    n.externalLabel
+      ? [
+          {
+            ...n.externalLabel,
+            id: "label:" + n.id,
+            row: n.row,
+            column: n.column,
+          },
+        ]
+      : [],
+  );
+  const edges = routeEdges([...nodes, ...labelObstacles], flows, 176, 48, {
       bands,
       mode: "row",
       diagnostics,

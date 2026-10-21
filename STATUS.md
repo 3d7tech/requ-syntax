@@ -37,3 +37,7 @@ Routing retries 8/4/0px then an elbow; crowded ports and labels recover with W00
 ## Renderer compaction — item 2 complete
 
 Long grids now compact physical column gaps while preserving predecessor ranks, independent same-rank steps and aligned cross-lane reverse pairs. Rating width: 4,336 → 2,599px. Its recovered segment-intersection count stays at seven, with no shared segments; W008 remains visible. All original example geometry checks pass. Build, 197 tests and lint pass.
+
+## Decision sizing — item 3 complete
+
+Decision diamonds are capped at 96px. Long labels move below a 72px diamond with reserved lane and routing space. Build, 208 tests and lint pass. All eleven golden SVGs pass browser text collision and internal diamond padding checks.
