@@ -1,0 +1,23 @@
+org "Northbank Retail"
+
+team marketing "Marketing" owner="CMO"
+team lending "Lending" owner="Head of Lending"
+team ops "Loan operations"
+team assist "Support agent" type=agent
+team support "Customer support" owner="Support lead"
+team bureau "Credit bureau" type=external
+
+process lending "Loan origination" ref=loan
+process lending "Credit decisions"
+process ops "Loan funding"
+process assist "Answer account questions"
+
+handoff marketing -> lending : "Qualified lead"
+handoff lending -> ops : "Approved loan"
+handoff lending -> bureau : "Credit check request"
+handoff assist -> support : "Escalated query"
+
+stage "Discover" : marketing
+stage "Apply" : lending, assist
+stage "Get funds" : ops
+stage "Get help" : assist, support

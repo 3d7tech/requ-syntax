@@ -1,0 +1,30 @@
+requ 0.1
+process loan "Retail loan application"
+
+lane customer "Customer" type=customer
+lane branch "Branch lending team" type=team owner="Head of Lending"
+lane scorer "Credit scoring agent" type=agent
+lane bureau "Credit bureau" type=external
+
+customer.apply: "Submit application" start
+branch.kyc: "Verify identity" sub=kyc system="Onfido"
+scorer.score: "Score credit risk"
+bureau.report: "Return credit report"
+branch.decide: "Approve?" decision
+customer.sign: "Sign loan offer" end
+branch.decline: "Send decline letter" end basis=suggested
+
+apply -> kyc -> score
+score -> report : "request report"
+report -> score : "report"
+score -> decide
+decide -> sign : "yes"
+decide -> decline : "no"
+
+process kyc "KYC checks"
+lane branch "Branch lending team"
+lane idv "ID verification provider" type=external
+branch.collect: "Collect documents" start
+idv.verify: "Verify documents"
+branch.record: "Record result" end
+collect -> verify -> record
