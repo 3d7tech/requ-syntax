@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Write Requ syntax and turn plain text into swimlane workflows and operating maps. Try nine examples, check diagnostics, share diagrams and export SVG."
+    />
+    <meta name="theme-color" content="#246958" />
+    <link rel="canonical" href="https://requstory.com/dev/" />
+    <title>Requ syntax playground — workflows from text | Requstory</title>
+  </head>
+  <body>
+    <header class="header">
+      <a class="brand" href="/dev/" aria-label="Requ syntax playground"
+        ><span class="mark" aria-hidden="true">rq</span
+        ><strong>Requ syntax</strong></a
+      >
+      <nav aria-label="Resources">
+        <a href="./guide.html">Language guide</a
+        ><a href="https://github.com/3d7tech/requ-syntax">GitHub</a
+        ><a href="/">Requstory</a>
+      </nav>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="heading">
+        <h1 id="heading">Text in. Workflow out.</h1>
+        <p>Write a workflow or operating map. See it as you type.</p>
+      </section>
+      <div class="toolbar">
+        <label
+          >Example
+          <select id="examples" aria-label="Example">
+            <option>Loading examples…</option>
+          </select></label
+        >
+        <label id="diagram-field" hidden
+          >Diagram
+          <select id="diagrams" aria-label="Diagram"></select
+        ></label>
+        <label
+          >Theme
+          <select id="theme" aria-label="Theme">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select></label
+        >
+        <button id="share" class="primary" type="button">Share</button>
+        <details id="exports">
+          <summary>Export</summary>
+          <div class="export-menu">
+            <button type="button" id="copy-svg">Copy SVG</button
+            ><button type="button" id="download-svg">Download SVG</button
+            ><button type="button" id="copy-markdown">Copy Markdown</button>
+          </div>
+        </details>
+      </div>
+      <div id="share-fallback" class="share-fallback" hidden>
+        <label for="share-url">Share link — copy this URL</label
+        ><input id="share-url" readonly type="text" /><button
+          type="button"
+          id="close-share"
+        >
+          Close
+        </button>
+      </div>
+      <p id="action-status" role="status" aria-live="polite"></p>
+      <div class="view-tabs" role="group" aria-label="Workspace view">
+        <button
+          id="editor-tab"
+          type="button"
+          aria-pressed="true"
+          aria-controls="source-pane"
+        >
+          Editor</button
+        ><button
+          id="preview-tab"
+          type="button"
+          aria-pressed="false"
+          aria-controls="preview-pane"
+        >
+          Preview
+        </button>
+      </div>
+      <div class="workspace" data-view="editor">
+        <section id="source-pane" aria-label="Source">
+          <div class="pane-heading">
+            <span>Source · requ</span
+            ><span id="render-status" role="status">Loading…</span>
+          </div>
+          <div id="editor"></div>
+        </section>
+        <section id="preview-pane" aria-label="Preview">
+          <div class="pane-heading">
+            <span>Preview</span>
+            <div class="preview-controls">
+              <label
+                ><input type="checkbox" id="annotate" /> No owner notes</label
+              ><button id="zoom" type="button" aria-pressed="false">
+                100%
+              </button>
+            </div>
+          </div>
+          <div id="preview" class="preview fit" aria-busy="true"></div>
+        </section>
+      </div>
+      <section class="diagnostics" aria-labelledby="diagnostics-heading">
+        <h2 id="diagnostics-heading">
+          Diagnostics <span id="diagnostic-count" aria-live="polite"></span>
+        </h2>
+        <ul id="diagnostic-list"></ul>
+      </section>
+      <footer>
+        <span>Runs in your browser. Sharing puts source in the link.</span
+        ><a href="https://github.com/3d7tech/requ-syntax/blob/main/LICENSE"
+          >Requ 0.1 · MIT</a
+        >
+      </footer>
+      <section class="about">
+        <h2>Workflows and operating maps in plain text</h2>
+        <p>
+          Requ is an open-source diagram language for people and LLMs. Define
+          teams, customer journeys, AI agents, handoffs and swimlanes. The same
+          source works in this playground, the command line and browser embeds.
+        </p>
+        <p>
+          <a href="./guide.html">Learn the syntax</a> or
+          <a href="https://github.com/3d7tech/requ-syntax#local-quick-start"
+            >use the CLI and browser packages</a
+          >.
+        </p>
+      </section>
+      <noscript
+        >Enable JavaScript to use the editor and renderer. The language guide is
+        available without JavaScript.</noscript
+      >
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -22,5 +22,15 @@
     "@requstory/core": "workspace:*"
   },
   "unpkg": "./dist/requ.global.js",
-  "jsdelivr": "./dist/requ.global.js"
+  "jsdelivr": "./dist/requ.global.js",
+  "description": "Browser embeds and web component for Requ diagrams",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3d7tech/requ-syntax.git",
+    "directory": "packages/web"
+  },
+  "homepage": "https://requstory.com/dev/",
+  "publishConfig": {
+    "access": "public"
+  }
 }

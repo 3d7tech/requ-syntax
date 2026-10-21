@@ -23,5 +23,15 @@
   },
   "bin": {
     "requ": "./dist/index.js"
+  },
+  "description": "Command-line rendering and linting for Requ diagrams",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3d7tech/requ-syntax.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://requstory.com/dev/",
+  "publishConfig": {
+    "access": "public"
   }
 }

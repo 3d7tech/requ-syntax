@@ -1,0 +1,52 @@
+name: Publish reviewed npm release
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Reviewed tag with passing CI (for example v0.1.0)
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+      - name: Require reviewed release tag and passing CI
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "refs/tags/$RELEASE_TAG")"
+          conclusion="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$(git rev-parse HEAD)" --status success --json conclusion --jq '.[0].conclusion')"
+          test "$conclusion" = success
+          node --input-type=module -e 'import fs from "node:fs"; for (const name of ["core","cli","web"]) {const pkg=JSON.parse(fs.readFileSync(`packages/${name}/package.json`)); if (`v${pkg.version}`!==process.env.RELEASE_TAG) throw Error("Tag and package version differ");}'
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm lint
+      - name: Publish public packages in dependency order
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN"
+          npm whoami
+          pnpm --filter @requstory/core publish --access public --no-git-checks
+          pnpm --filter @requstory/cli publish --access public --no-git-checks
+          pnpm --filter @requstory/web publish --access public --no-git-checks

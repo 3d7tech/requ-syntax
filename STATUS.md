@@ -10,12 +10,10 @@ Org uses deterministic longest-path columns and shared first-stage rows, with 16
 
 Validation: 171 tests across ten files pass; build, lint and strict TypeScript pass. Both ESM/IIFE bundles pass real-browser embed, link/back, source and theme checks. All ten golden SVGs pass browser text-bounds and 8px diamond-padding checks. Tests verify zero edge crossings and 8px clearance in all nine examples, including loan and Northbank, plus decision sides, 24px spacing, inverse columns/tracks, label constraints and org height. Tests cover examples and targeted fixtures; an unsatisfiable graph returns an E009 diagnostic rather than violating routing rules.
 
-## M7 remaining
+## M7 playground complete — build review pending
 
-Nine examples, gallery, README, llms.txt and compressed share-link logic are ready. Playground UI mockups still need to be shown and approved before Vite/CodeMirror UI work. The current playground package contains share-link logic only; its build checks TypeScript. Full playground implementation and /dev artifact remain unfinished.
+Phone/desktop mockups approved 21 October 2026. Vite/CodeMirror UI now includes live preview, nine examples, clickable diagnostics, diagram/theme selection, optional owner notes, phone Editor/Preview switching, Fit/100% preview, bounded compressed share links, clipboard fallback, SVG copy/download and Markdown copy. Crawlable introduction, guide and canonical URLs use /dev/. CI uploads a checked static artifact with source commit metadata.
 
-Remote connected: https://github.com/3d7tech/requ-syntax (main). Initial tested build pushed on 21 October. First Linux CI run found wider system-font metrics in decision labels; decision sizing now reserves extra font room, and three snapshots were updated. Local build, 171 tests, lint and browser checks pass again. GitHub CI passed for commit 65259dd: https://github.com/3d7tech/requ-syntax/actions/runs/39570350903 (build, 171 tests, lint, embeds and all ten browser geometry checks).
+Validation: 173 unit/integration tests; build, lint and strict types; ESM/IIFE embeds; all ten SVG text/padding checks; playground browser checks at 1440/390/320px including all nine examples, sub-diagram selection, annotation, zoom, source edits, diagnostic focus, share reload/recovery, clipboard/downloads, escaping and /dev asset paths. npm tarballs are prepared for inspection; publication is gated on completed-build review, scope access and an Actions release tag.
 
-Phone/desktop mockups prepared for approval at `/Users/3d7tech/.codex/visualizations/2026/10/21/01a15d26-4546-7152-84fc-e0cb994e40f1/requ-playground.html`; input and phone view switching checked at 1024/390/320px. Full CodeMirror UI remains gated on that review.
-
-npm access check: this machine is not signed in; unauthenticated org lookup returns scope not found. Publishing rights remain unverified (this does not establish scope availability). No packages published and no live deployment. Current Requstory application and original spec.md are unchanged.
+Remote: https://github.com/3d7tech/requ-syntax (main). npm is not signed in locally, so @requstory access remains unverified. No npm publication or production deployment. The frontend release integration is being prepared on a separate branch using the checked static artifact; no app features or original spec changed.

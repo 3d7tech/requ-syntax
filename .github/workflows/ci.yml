@@ -19,3 +19,9 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:browser
       - run: pnpm test:visual
+      - run: pnpm test:playground
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playground-${{ github.sha }}
+          path: apps/playground/dist/
+          if-no-files-found: error

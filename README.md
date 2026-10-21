@@ -18,6 +18,7 @@ pnpm requ render examples/loan-application.requ --json
 pnpm requ lint examples/loan-application.requ
 cat examples/loan-application.requ | pnpm --silent requ render - > loan.svg
 pnpm gallery
+pnpm dev
 ```
 
 Open gallery.html to inspect every example. errors-demo intentionally contains errors.
@@ -83,12 +84,13 @@ pnpm lint
 pnpm exec playwright install chromium
 pnpm test:browser
 pnpm test:visual
+pnpm test:playground
 ```
 
 Browser tests exercise the actual ESM and IIFE bundles. `PLAYWRIGHT_MODULE` can point to an installed Playwright module when using a bundled runtime. `pnpm exec vitest run -u` updates SVG snapshots; review `pnpm gallery` before committing them.
 
 ## Playground and release
 
-Target: `https://requstory.com/dev`. Source stays in this separate repository. UI implementation awaits phone/desktop mockup review; compressed share-link logic is tested. No production route has been changed.
+Target: `https://requstory.com/dev/`. Run `pnpm dev` to open the CodeMirror playground. It includes all nine examples, live SVG preview, clickable diagnostics, diagram/theme selection, owner annotation, phone Editor/Preview controls, 100%/Fit view, compressed share links, Copy SVG, Download SVG and Copy Markdown. The Vite build is `apps/playground/dist`, with `/dev/` asset paths and a crawlable guide. No production route has been changed.
 
-Deployment must use GitHub Actions. The remote repo and handoff of the /dev artifact into Requstory hosting still need setup. Existing Requstory JSON exports stay unchanged; a lossless adapter comes later.
+Deployment uses GitHub Actions and a reviewed CI artifact in the existing paired Requstory release. See [DEPLOYMENT.md](DEPLOYMENT.md). A manual npm workflow requires a reviewed release tag with passing CI and an NPM_TOKEN in the npm-release environment; scope access must be verified before use. Existing Requstory JSON exports stay unchanged; a lossless adapter comes later.

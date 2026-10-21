@@ -17,5 +17,15 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "description": "Requ parser, lint rules and SVG renderer for workflows and operating maps",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3d7tech/requ-syntax.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://requstory.com/dev/",
+  "publishConfig": {
+    "access": "public"
   }
 }
