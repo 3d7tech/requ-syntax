@@ -21,10 +21,6 @@ approve -> receive : "approved"
 
 **[Open the playground](https://requstory.com/dev/)** — edit an example, see the diagram, then share it or download SVG. **Copy for AI** gives ChatGPT or Claude the language guide and your source.
 
-<!-- npm-release-pending -->
-
-The npm/CDN release is pending publishing access. These commands will work after v0.1.0 is published; the playground is live now.
-
 Save the example above as `workflow.requ`, then render it with Node 20 or later:
 
 ```sh
@@ -39,7 +35,7 @@ process hello "Hello Requ"
 lane team "My team" owner="Team lead"
 team.start: "Start here" start
 </pre>
-<script src="https://cdn.jsdelivr.net/npm/@requstory/web@0.1.0/dist/requ.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@requstory/web@0.1.1/dist/requ.global.js"></script>
 <script>
   requ.run();
 </script>

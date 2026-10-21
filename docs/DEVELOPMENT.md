@@ -10,7 +10,7 @@ Run these commands from the repository root.
 
 ## Local quick start
 
-Requires Node 20+ and pnpm. Packages are built locally; they have not been published.
+Requires Node 20+ and pnpm. Published packages are available as `@requstory/core`, `@requstory/cli` and `@requstory/web`.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -57,7 +57,7 @@ support.receive: "Receive request" start</pre
 <requ-diagram theme="auto">process "Another diagram"</requ-diagram>
 ```
 
-The IIFE is `requ.global.js` and exposes `window.requ.run()`. Versioned npm/CDN URLs will be documented after publication. Escape literal HTML when placing user source in HTML; use textContent when setting it through JavaScript.
+The IIFE is `requ.global.js` and exposes `window.requ.run()`. Use `https://cdn.jsdelivr.net/npm/@requstory/web@0.1.1/dist/requ.global.js`. Escape literal HTML when placing user source in HTML; use textContent when setting it through JavaScript.
 
 Components rerender on source, theme or diagram changes and emit bubbling `requ-diagnostics` events whose detail is the diagnostic array. Resolved org refs open the target process with a Back button; subprocess steps show a marker only.
 
@@ -97,7 +97,7 @@ Browser tests exercise the actual ESM and IIFE bundles. `PLAYWRIGHT_MODULE` can 
 
 Live: https://requstory.com/dev/. Run `pnpm dev` to open the CodeMirror playground. It includes all eleven examples locally (the deployed build still has nine), live SVG preview, clickable diagnostics, diagram/theme selection, owner annotation, phone Editor/Preview controls, 100%/Fit view, compressed share links, Copy SVG, Download SVG and Copy Markdown. The Vite build is `apps/playground/dist`, with `/dev/` asset paths and a crawlable guide. The playground is live at `/dev/`; the existing app routes are preserved.
 
-Deployment uses GitHub Actions and a reviewed CI artifact in the existing paired Requstory release. See [DEPLOYMENT.md](../DEPLOYMENT.md). A manual npm workflow requires a reviewed release tag with passing CI and an NPM_TOKEN in the npm-release environment; scope access must be verified before use. Existing Requstory JSON exports stay unchanged; a lossless adapter comes later.
+Deployment uses GitHub Actions and a reviewed CI artifact in the existing paired Requstory release. See [DEPLOYMENT.md](../DEPLOYMENT.md). The npm workflow stages a reviewed tag with passing CI using `NPM_TOKEN`; a maintainer approves the staged packages in npm with 2FA. Existing Requstory JSON exports stay unchanged; a lossless adapter comes later.
 
 The public [examples](https://requstory.com/dev/examples/) contain rendered SVG and complete source without JavaScript. The [language guide](https://requstory.com/dev/guide.html) opens each example in the editor. Use **Copy for AI** for a prompt with the full language guide and current source. **Show gaps** adds owner notes; **Open in Requstory** opens the website mapper (source import is deferred). Crawlers can use [llms.txt](https://requstory.com/dev/llms.txt) and the [full reference](https://requstory.com/dev/llms-full.txt).
 

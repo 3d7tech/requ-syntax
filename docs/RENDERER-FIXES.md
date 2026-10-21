@@ -34,7 +34,7 @@ The original renderer returned a 640px error SVG for bond rating; that is not a 
 - Rating remains congested: seven segment intersections, the same count as the recovery baseline, and three W008 warnings. Compaction does not increase that count; this is not a zero-crossing result.
 - Browser checks pass for ESM/IIFE embeds, all eleven default golden SVGs, text collisions, internal diamond padding and the playground at 1440/390/320px. Attribute-only light process/dark annotated org exports also have golden snapshots.
 - CairoSVG converted all eleven inline diagrams into visible PNGs. Core has no runtime dependencies.
-- The ten-example gallery is regenerated. These changes have not been deployed or published to npm.
+- The eleven-example gallery is regenerated. These changes are published as `@requstory/*@0.1.1`; the playground deployment is still pending.
 
 ```sh
 pnpm requ render examples/bond-rating.requ --inline-styles -o rating.svg
