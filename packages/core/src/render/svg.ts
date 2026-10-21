@@ -1,3 +1,5 @@
+import { layoutOrg } from "../layout/org";
+import type { OrgDiagram } from "../model";
 import { parse } from "../parser";
 import { lint } from "../lint/index";
 import {
@@ -87,7 +89,7 @@ export function edgeMarkup(
         }
       }
       const x = (a.x + b.x) / 2,
-        y = (a.y + b.y) / 2;
+        y = (a.y + b.y) / 2 + (e.back ? 14 : 0);
       const label = item.label;
       const w = Math.min(140, measure(label, 11) + 12);
       return `<g ${attrs(item, "flow")} >${title(item)}<path class="requ-edge${e.back ? " back-edge" : ""}" d="${e.points.map((p, i) => `${i ? "L" : "M"}${p.x},${p.y}`).join(" ")}" marker-end="url(#${prefix}-arrow)"/>${label ? `<rect class="pill" x="${x - w / 2}" y="${y - 10}" width="${w}" height="20" rx="5"/>${textLines(label, x, y + 4, w - 8, 11, 1)}` : ""}</g>`;
@@ -183,15 +185,19 @@ export async function render(
         diagnostics,
       };
     if (d.kind === "org") {
-      diagnostics.push(
-        diagnostic("E009", "Org rendering is not implemented yet.", d.loc),
+      const layout = await layoutOrg(d);
+      const refs = new Set(
+        result.doc.diagrams
+          .filter((x) => x.kind === "process")
+          .map((x) => x.id),
       );
       return {
         svg: svgDocument(
           id,
           d.label,
-          { width: 640, height: 100 },
-          "",
+          layout,
+          textLines(d.label, 16, 32, layout.width - 32, 20, 1, "start") +
+            orgMarkup(d, layout, id, refs),
           diagnostics,
           opts,
         ),
@@ -234,3 +240,55 @@ export async function render(
   }
 }
 export type { Box };
+
+function orgMarkup(
+  d: OrgDiagram,
+  l: Layout,
+  prefix: string,
+  refs: Set<string>,
+): string {
+  const palette = [
+    "#167969",
+    "#7653b5",
+    "#2477ab",
+    "#a16114",
+    "#9a4e7b",
+    "#74808e",
+  ];
+  const journey = d.journey
+    .map((stage, i) => {
+      const x = 16 + i * 216,
+        y = 64;
+      return `<g ${attrs(stage, "stage")}>${title(stage)}<path d="M${x} ${y}H${x + 188}L${x + 208} ${y + 27}L${x + 188} ${y + 54}H${x}L${x + 16} ${y + 27}Z" fill="var(--band)" stroke="var(--line)"/>${textLines(stage.label, x + 109, y + 31, 164, 13, 1)}${stage.teams
+        .map(
+          (team, j) =>
+            `<circle data-requ-team="${esc(team)}" cx="${x + 24 + j * 18}" cy="${y + 73}" r="5" fill="${
+              palette[
+                Math.max(
+                  0,
+                  d.teams.findIndex((t) => t.id === team),
+                ) % palette.length
+              ]
+            }"><title>${esc(d.teams.find((t) => t.id === team)?.label ?? team)}</title></circle>`,
+        )
+        .join("")}</g>`;
+    })
+    .join("");
+  const cards = l.nodes
+    .map((b) => {
+      const team = d.teams.find((t) => t.id === b.id)!,
+        color = palette[d.teams.indexOf(team) % palette.length];
+      const processes = team.processes
+        .slice(0, 6)
+        .map((p, i) => {
+          const y = b.y + 119 + i * 26,
+            label = textLines(p.label, b.x + 16, y, 190, 12, 1, "start"),
+            link = p.ref && refs.has(p.ref);
+          return `<g ${attrs(p, "process")}>${title(p)}${link ? `<a href="#requ-diagram-${esc(p.ref!)}" data-requ-ref="${esc(p.ref!)}">${label}<text x="${b.x + 218}" y="${y}">↗</text></a>` : label + (p.ref ? `<text class="muted" x="${b.x + 218}" y="${y}">↗</text>` : "")}${p.basis === "suggested" ? `<text class="badge" x="${b.x + 205}" y="${y}">?</text>` : ""}</g>`;
+        })
+        .join("");
+      return `<g ${attrs(team, "team", `actor-${team.type}`)} tabindex="0">${title(team)}<rect class="shape" x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" rx="9"/><circle cx="${b.x + 16}" cy="${b.y + 18}" r="4" fill="${color}"/>${icon(team.type, b.x + 16, b.y + 34)}${textLines(team.label, b.x + 44, b.y + 39, 176, 14, 2, "start")}${team.owner ? `<text class="muted" x="${b.x + 16}" y="${b.y + 79}">${esc(wrap(team.owner, 200, 11, 1)[0])}</text>` : ""}${team.type === "agent" ? `<text class="badge" x="${b.x + 206}" y="${b.y + 19}">AI</text>` : ""}${team.basis === "suggested" ? `<text class="badge" x="${b.x + 226}" y="${b.y + 19}">?</text>` : ""}<path d="M${b.x} ${b.y + 94}h${b.width}" stroke="var(--line)"/>${processes}${team.processes.length > 6 ? `<text class="muted" x="${b.x + 16}" y="${b.y + b.height - 14}">+${team.processes.length - 6} more</text>` : ""}</g>`;
+    })
+    .join("");
+  return journey + edgeMarkup(l, d.handoffs, prefix) + cards;
+}
