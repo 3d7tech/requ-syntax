@@ -1,6 +1,6 @@
 # Requ syntax — proposed build plan
 
-Status: approved 21 October 2026. Milestones 1–7 implemented and locally validated; completed-build release review pending.
+Status: approved 21 October 2026. Milestones 1–7 complete; playground live at https://requstory.com/dev/ after approval on 21 October 2026. npm publishing access remains unverified.
 
 ## Goal
 
@@ -66,7 +66,7 @@ No PNG, hosted render API, MCP server, Mermaid compiler, editor/Markdown plugins
 - Playground URL: `https://requstory.com/dev`, chosen to support the main site’s SEO. Keep source in the separate requ-syntax repository. Build assets with `/dev/` as the base, and test direct loads, asset URLs and compressed hash links there. Include crawlable introductory content, canonical metadata and links to the language guide. SEO benefit is a goal, not a guaranteed result. Route/static hosting integration must preserve existing Requstory routes and use GitHub Actions.
 - JSON export: later. Keep existing exports unchanged in the MVP; design and test a lossless adapter before integration.
 
-These three choices are settled. Overall build and proposed technical decisions approved 21 October 2026. Playground UI mockups approved 21 October; the completed build now awaits release review.
+These three choices are settled. Overall build and proposed technical decisions approved 21 October 2026. Playground UI mockups approved 21 October; the completed build was reviewed and deployment approved. Playground is live.
 
 ## Release details still open
 
