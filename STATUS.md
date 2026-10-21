@@ -29,3 +29,7 @@ GitHub and raw README verified in a fresh logged-out browser. Repository metadat
 Proper Markdown guide, playable examples, nine static SVG/source pages, main-page static loan SVG, llms.txt/full reference and sitemap are live. Show gaps, Copy for AI (prompt + full guide + current source) and Open in Requstory are added. The latter opens the mapper; import is deferred.
 
 Source 8750777841df365e77a95fd4126bd1762c22eeee; syntax CI 39582199833 passed 175 tests and all browser checks. FE PR #190/CI 39582977535, staging 39596543305 and BE publish 39596747429 passed. Release first-draft-20261021-requ-public-docs. Live JavaScript-disabled guide/all nine examples and all 38 artifact files verified; root sitemap/llms entries and phone/desktop main app checks pass. Main app asset remains index-DrfYHVOf.js.
+
+## Renderer recovery — item 1 complete
+
+Routing retries 8/4/0px then an elbow; crowded ports and labels recover with W008. The new sovereign debt rating example includes vote → research (“more analysis”), renders all 27 edges and no E009. Before this fix it returned the error SVG; recovered layout width is 4,336px before compaction. Original nine examples keep their strict routing checks. Build, 195 tests and lint pass.

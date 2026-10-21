@@ -1,3 +1,4 @@
+import type { Diagnostic } from "../model";
 export interface Point {
   x: number;
   y: number;
@@ -44,6 +45,7 @@ export interface JourneyStage extends Box {
   pills: JourneyPill[];
 }
 export interface Layout {
+  diagnostics?: Diagnostic[];
   width: number;
   height: number;
   nodes: PlacedNode[];

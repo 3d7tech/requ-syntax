@@ -56,6 +56,7 @@ const names: Record<string, string> = {
   "invoice-approval-with-agent": "Invoice approval with agent",
   "saas-company-org": "SaaS operating map",
   "bank-account-opening": "Bank account opening",
+  "bond-rating": "Sovereign debt rating",
   "errors-demo": "Errors and recovery",
 };
 const examples = Object.entries(names).map(([id, label]) => ({

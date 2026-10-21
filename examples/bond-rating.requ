@@ -1,0 +1,62 @@
+requ 0.1
+process sovereign_rating "Sovereign debt rating process"
+
+lane sovereign "Sovereign government" type=customer owner="Ministry of Finance / Debt Management Office"
+lane agency "Rating agency (S&P / Moody’s / Fitch)" type=team owner="Sovereign ratings head"
+lane lead "Lead analyst" type=team
+lane backup "Backup analyst" type=team
+lane committee "Rating committee" type=team owner="Committee chair"
+lane market "Investors & markets" type=external
+
+# Main flow – solicited initial rating
+sovereign.request: "Request rating / sign engagement" start
+agency.assign: "Assign lead & backup analysts"
+lead.gather: "Request data package & set meeting agenda"
+sovereign.prepare: "Compile economic, fiscal, external & institutional data"
+lead.meeting: "Hold management meetings with officials"
+lead.research: "Independent research & peer comparison"
+lead.score: "Score five pillars (Institutional, Economic, External, Fiscal, Monetary)"
+lead.draft: "Prepare draft rating, outlook & rationale"
+agency.committee: "Convene rating committee"
+committee.debate: "Present scores, debate qualitative overlays" decision
+committee.vote: "Vote on rating & outlook"
+agency.publish: "Publish rating & press release"
+agency.surveil: "Begin ongoing surveillance" end
+
+# Flows
+request -> assign -> gather
+gather -> prepare : "data request"
+prepare -> meeting
+meeting -> research -> score -> draft -> committee
+committee -> debate
+debate -> vote : "ready for vote"
+debate -> draft : "request more analysis"
+vote -> research : "more analysis"
+vote -> publish : "majority reached"
+publish -> surveil
+
+# Alternative / exception paths
+sovereign.decline: "Decline meeting or withhold data" basis=suggested
+agency.public: "Proceed on public information only or withdraw" basis=suggested
+committee.reject: "Reject draft" basis=suggested
+sovereign.appeal: "Appeal the rating" basis=suggested
+agency.review: "Review appeal & possible re-vote" basis=suggested
+
+gather -> decline : "no cooperation"
+decline -> public
+vote -> reject : "no majority / material concerns"
+reject -> draft
+publish -> appeal
+appeal -> review
+review -> vote
+
+# Ongoing surveillance (simplified loop)
+agency.monitor: "Monitor data, events & peer moves"
+agency.trigger: "Material change detected?" decision
+agency.action: "Initiate rating review / outlook change"
+
+surveil -> monitor
+monitor -> trigger
+trigger -> action : "yes"
+trigger -> monitor : "no"
+action -> draft

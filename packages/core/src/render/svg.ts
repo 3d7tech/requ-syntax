@@ -176,6 +176,7 @@ export async function render(
       };
     if (d.kind === "org") {
       const layout = await layoutOrg(d, { annotate: opts.annotate });
+      diagnostics.push(...(layout.diagnostics ?? []));
       const refs = new Set(
         result.doc.diagrams
           .filter((x) => x.kind === "process")
@@ -195,6 +196,7 @@ export async function render(
       };
     }
     const layout = layoutProcess(d);
+    diagnostics.push(...(layout.diagnostics ?? []));
     return {
       svg: svgDocument(
         id,

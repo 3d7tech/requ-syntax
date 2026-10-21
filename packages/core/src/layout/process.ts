@@ -1,4 +1,4 @@
-import type { ProcessDiagram, Step } from "../model";
+import type { Diagnostic, ProcessDiagram, Step } from "../model";
 import { measure, wrap } from "./text";
 import { longestLayers } from "./layers";
 import { portRequirements, routeEdges } from "./routing";
@@ -141,7 +141,12 @@ export function layoutProcess(d: ProcessDiagram): Layout {
     }
     y += height;
   }
-  const edges = routeEdges(nodes, flows, 176, 48, { bands, mode: "row" }),
+  const diagnostics: Diagnostic[] = [];
+  const edges = routeEdges(nodes, flows, 176, 48, {
+      bands,
+      mode: "row",
+      diagnostics,
+    }),
     width = Math.max(
       480,
       ...nodes.map((n) => n.x + n.width + 48),
@@ -160,6 +165,7 @@ export function layoutProcess(d: ProcessDiagram): Layout {
         .filter((e) => e.label)
         .map((e) => e.label!.y + e.label!.height + 24),
     ),
+    diagnostics,
     nodes,
     edges,
     bands,

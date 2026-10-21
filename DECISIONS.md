@@ -37,3 +37,7 @@ This section supersedes the previous 12px tracks, arbitrary decision-side select
 Desktop/phone mockups approved. Vite/CodeMirror build uses /dev/ and runs fully in the browser. Source share links use the existing bounded deflate codec; failed clipboard access exposes a manual-copy URL. Clickable diagnostics focus the editor. SVG/download exports use the current render; Markdown uses a fence longer than any source backtick run. The static guide is crawlable without JavaScript.
 
 The source repo is now public; the initial release used an artifact handoff while it was private. The existing frontend release bundles its unchanged passing-CI artifact, with immutable source metadata, to avoid adding cross-repo credentials. FE staging adds dev to the existing page backup/rollback manifest, sitemap and llms.txt. Final deployment and npm publication still follow completed-build review.
+
+## Nonfatal routing — 21 October 2026
+
+Routing difficulty now retries 8px, 4px and 0px edge clearance, then draws an elbow. Crowded ports and labels also recover. W008 identifies affected edges with the requested repair hint; E009 remains for invalid layouts. This supersedes the previous strict-routing failure behavior. The supplied sovereign-rating regression is saved as bond-rating.requ, with the user-confirmed vote → research back-edge. It requires degraded routes; the existing nine examples retain their strict geometry checks.

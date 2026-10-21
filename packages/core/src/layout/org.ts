@@ -1,5 +1,5 @@
 import { longestLayers } from "./layers";
-import type { OrgDiagram } from "../model";
+import type { Diagnostic, OrgDiagram } from "../model";
 import { measure, wrap } from "./text";
 import { portRequirements, routeEdges } from "./routing";
 import type { JourneyStage, Layout } from "./types";
@@ -115,9 +115,11 @@ export async function layoutOrg(
       64 +
       widths.slice(0, n.column).reduce((sum, w) => sum + w + 144, 0) +
       (widths[n.column!] - n.width) / 2;
+  const diagnostics: Diagnostic[] = [];
   const gridHeight = contentTop + Math.max(1, rows) * 160,
     edges = routeEdges(nodes, d.handoffs, 16, contentTop, {
       mode: "column",
+      diagnostics,
       maxY: gridHeight - 8,
     }),
     width = Math.max(
@@ -133,6 +135,7 @@ export async function layoutOrg(
     width,
     height: gridHeight,
     rows,
+    diagnostics,
     journeyHeight: contentTop,
     nodes,
     edges,

@@ -1,4 +1,4 @@
-import type { Common } from "../model";
+import { diagnostic, type Common, type Diagnostic } from "../model";
 import { measure, wrap } from "./text";
 import type {
   Band,
@@ -18,6 +18,26 @@ export interface RoutingOptions {
   mode?: "row" | "column";
   bands?: Band[];
   maxY?: number;
+  diagnostics?: Diagnostic[];
+}
+function warnRouting(edge: Connection, options: RoutingOptions): void {
+  const message = `Edge ${edge.from} -> ${edge.to} could not be routed cleanly.`;
+  if (
+    !options.diagnostics?.some(
+      (d) =>
+        d.code === "W008" &&
+        d.message === message &&
+        d.loc?.line === edge.loc.line,
+    )
+  )
+    options.diagnostics?.push(
+      diagnostic(
+        "W008",
+        message,
+        edge.loc,
+        "Diagram still rendered; consider reordering lanes or steps.",
+      ),
+    );
 }
 const EPS = 0.001,
   MIN_PORT_GAP = 24,
@@ -237,7 +257,12 @@ function allocatePorts(
   for (const r of requests) {
     const node = r.node,
       side = r.side,
-      offset = r.offset!,
+      limit = Math.max(
+        0,
+        (side === "left" || side === "right" ? node.height : node.width) / 2 -
+          8,
+      ),
+      offset = Math.max(-limit, Math.min(limit, r.offset!)),
       cx = node.x + node.width / 2,
       cy = node.y + node.height / 2;
     let x = cx,
@@ -255,11 +280,7 @@ function allocatePorts(
         (node.height / 2 -
           (node.diamond ? (Math.abs(offset) * node.height) / node.width : 0));
     }
-    if (
-      Math.abs(offset) >
-      (side === "left" || side === "right" ? node.height : node.width) / 2 - 8
-    )
-      throw Error("Node is too small for 24px port spacing.");
+    if (!same(offset, r.offset!)) warnRouting(r.edge, options);
     r.port = { x, y, side, node: node.id };
   }
   return new Map(
@@ -362,7 +383,8 @@ function path(
   maxY: number,
   initialDir: number,
   finalDir: number,
-): Point[] {
+  clearance: number,
+): Point[] | undefined {
   const xs = new Set<number>([start.x, end.x, minX]),
     ys = new Set<number>([start.y, end.y, minY]);
   const addX = (x: number) => {
@@ -436,7 +458,7 @@ function path(
       }
       continue;
     }
-    if (++visited > 200000) throw Error("Routing search limit exceeded.");
+    if (++visited > 200000) return undefined;
     for (const [dx, dy, dir] of [
       [1, 0, 1],
       [-1, 0, 1],
@@ -454,7 +476,7 @@ function path(
         allowed =
           !nodes.some((n) => hits(a, b, n, 8)) &&
           !occupied.some(
-            ([c, d]) => segmentDistance(a, b, c, d) < CLEARANCE - EPS,
+            ([c, d]) => segmentDistance(a, b, c, d) < clearance - EPS,
           ) &&
           !reserved.some(([c, d]) => segmentsOverlap(a, b, c, d));
         clear.set(cache, allowed);
@@ -481,7 +503,7 @@ function path(
       open.push(entry);
     }
   }
-  if (!goal) throw Error("No orthogonal route with 8px edge clearance.");
+  if (!goal) return undefined;
   const route: Point[] = [];
   let key: string | undefined = goal.key;
   while (key) {
@@ -503,7 +525,15 @@ function labels(
   for (const edge of edges) {
     const text = connections.find((c) => c.id === edge.id)!.label;
     if (!text) continue;
-    const lines = wrap(text, 144, 12, 3),
+    const straight =
+      edge.points.length === 2 && same(edge.points[0].y, edge.points[1].y);
+    const labelWidth = straight
+      ? Math.max(
+          48,
+          Math.min(144, Math.abs(edge.points[1].x - edge.points[0].x) - 24),
+        )
+      : 144;
+    const lines = wrap(text, labelWidth, 12, 3),
       width = Math.max(...lines.map((t) => measure(t, 12))) + 16,
       height = lines.length * 16 + 8;
     const pieces = segments(edge.points)
@@ -530,6 +560,7 @@ function labels(
           (Math.abs(b.x - a.x) + Math.abs(b.y - a.y)),
       );
     let found: PlacedLabel | undefined;
+    const alternatives: PlacedLabel[] = [];
     const pairSide = edge.pair
       ? edge.source.x <
         nodes.find((n) => n.id === edge.source.node)!.x +
@@ -555,7 +586,6 @@ function labels(
           ),
         ];
         for (const at of positions) {
-          if (at < start + half || at > end - half) continue;
           const x = horizontal
               ? at
               : a.x + (normal ? normal * (width / 2 + 8) : 0),
@@ -563,6 +593,8 @@ function labels(
               ? a.y + (normal ? normal * (height / 2 + 8) : 0)
               : at,
             box = { x: x - width / 2, y: y - height / 2, width, height, lines };
+          alternatives.push(box);
+          if (at < start + half || at > end - half) continue;
           if (
             box.x < minX ||
             box.y < minY ||
@@ -591,7 +623,48 @@ function labels(
         }
       }
     }
-    if (!found) throw Error(`No label slot within 16px of edge ${edge.id}.`);
+    if (!found) {
+      warnRouting(connections.find((c) => c.id === edge.id)!, options);
+      const a = edge.points[0],
+        b = edge.points.at(-1)!;
+      if (!alternatives.length)
+        alternatives.push({
+          x: Math.max(minX, (a.x + b.x - width) / 2),
+          y: Math.max(minY, (a.y + b.y - height) / 2),
+          width,
+          height,
+          lines,
+        });
+      const bounded = alternatives.map((box) => {
+        let y = Math.max(
+          minY,
+          Math.min(box.y, (options.maxY ?? Infinity) - height),
+        );
+        if (options.bands?.length) {
+          const shift = (b: Band) =>
+            Math.abs(
+              Math.max(b.y + 2, Math.min(y, b.y + b.height - height - 2)) - y,
+            );
+          const band = [...options.bands].sort(
+            (a, b) => shift(a) - shift(b),
+          )[0];
+          y = Math.max(
+            band.y + 2,
+            Math.min(y, band.y + band.height - height - 2),
+          );
+        }
+        return { ...box, x: Math.max(minX, box.x), y };
+      });
+      const score = (box: PlacedLabel) =>
+        nodes.filter((n) => boxesOverlap(box, n, 6)).length * 1000 +
+        placed.filter((p) => boxesOverlap(box, p, 6)).length * 100 +
+        edges.filter(
+          (other) =>
+            other !== edge &&
+            segments(other.points).some(([a, b]) => hits(a, b, box, 4)),
+        ).length;
+      found = bounded.sort((a, b) => score(a) - score(b))[0];
+    }
     edge.label = found;
     placed.push(found);
   }
@@ -656,74 +729,92 @@ export function routeEdges(
           : p.side === "top"
             ? q.y < p.y
             : q.y > p.y;
-    const direct =
-      (same(source.x, target.x) || same(source.y, target.y)) &&
-      a.id !== b.id &&
-      outward(source, target) &&
-      outward(target, source) &&
-      !nodes
-        .filter((n) => n.id !== a.id && n.id !== b.id)
-        .some((n) => hits(source, target, n)) &&
-      !protectedSegments.some(
-        ([e, f]) => segmentDistance(source, target, e, f) < 8 - EPS,
+    const attempt = (clearance: number): Point[] | undefined => {
+      const direct =
+        (same(source.x, target.x) || same(source.y, target.y)) &&
+        a.id !== b.id &&
+        outward(source, target) &&
+        outward(target, source) &&
+        !nodes
+          .filter((n) => n.id !== a.id && n.id !== b.id)
+          .some((n) => hits(source, target, n)) &&
+        !protectedSegments.some(
+          ([e, f]) => segmentDistance(source, target, e, f) < clearance - EPS,
+        );
+      const candidates = [
+        simplify([source, start, { x: start.x, y: end.y }, end, target]),
+        simplify([source, start, { x: end.x, y: start.y }, end, target]),
+      ].filter(
+        (points) =>
+          points.length <= 4 &&
+          !segments(points).some(
+            ([p, q], i, all) =>
+              nodes.some(
+                (n) =>
+                  !(
+                    (i === 0 && n.id === a.id) ||
+                    (i === all.length - 1 && n.id === b.id)
+                  ) && hits(p, q, n, 8),
+              ) ||
+              protectedSegments.some(
+                ([g, h]) => segmentDistance(p, q, g, h) < clearance - EPS,
+              ),
+          ),
       );
-    const candidates = [
-      simplify([source, start, { x: start.x, y: end.y }, end, target]),
-      simplify([source, start, { x: end.x, y: start.y }, end, target]),
-    ].filter(
-      (points) =>
-        points.length <= 4 &&
-        !segments(points).some(
-          ([p, q], i, all) =>
-            nodes.some(
-              (n) =>
-                !(
-                  (i === 0 && n.id === a.id) ||
-                  (i === all.length - 1 && n.id === b.id)
-                ) && hits(p, q, n, 8),
-            ) ||
-            protectedSegments.some(
-              ([g, h]) => segmentDistance(p, q, g, h) < 8 - EPS,
-            ),
-        ),
-    );
-    candidates.sort(
-      (x, y) =>
-        x.length - y.length ||
-        segments(x).reduce(
-          (sum, [p, q]) => sum + Math.abs(q.x - p.x) + Math.abs(q.y - p.y),
-          0,
-        ) -
-          segments(y).reduce(
+      candidates.sort(
+        (x, y) =>
+          x.length - y.length ||
+          segments(x).reduce(
             (sum, [p, q]) => sum + Math.abs(q.x - p.x) + Math.abs(q.y - p.y),
             0,
+          ) -
+            segments(y).reduce(
+              (sum, [p, q]) => sum + Math.abs(q.x - p.x) + Math.abs(q.y - p.y),
+              0,
+            ),
+      );
+      const searched = direct
+        ? [source, target]
+        : (candidates[0] ??
+          (() => {
+            const route = path(
+              start,
+              end,
+              nodes,
+              protectedSegments,
+              [...segments([source, start]), ...segments([end, target])],
+              minX,
+              minY,
+              options.maxY ?? Infinity,
+              source.side === "left" || source.side === "right" ? 1 : 2,
+              target.side === "left" || target.side === "right" ? 1 : 2,
+              clearance,
+            );
+            return route ? simplify([source, ...route, target]) : undefined;
+          })());
+      if (!searched) return undefined;
+      if (
+        segments(searched).some(([e, f]) =>
+          occupied.some(
+            ([g, h]) => segmentDistance(e, f, g, h) < clearance - EPS,
           ),
-    );
-    const points = direct
-      ? [source, target]
-      : (candidates[0] ??
-        simplify([
-          source,
-          ...path(
-            start,
-            end,
-            nodes,
-            protectedSegments,
-            [...segments([source, start]), ...segments([end, target])],
-            minX,
-            minY,
-            options.maxY ?? Infinity,
-            source.side === "left" || source.side === "right" ? 1 : 2,
-            target.side === "left" || target.side === "right" ? 1 : 2,
-          ),
-          target,
-        ]));
-    if (
-      segments(points).some(([e, f]) =>
-        occupied.some(([g, h]) => segmentDistance(e, f, g, h) < 8 - EPS),
+        )
       )
-    )
-      throw Error("Edge clearance violated at a port.");
+        return undefined;
+      return searched;
+    };
+    let points: Point[] | undefined;
+    for (const clearance of [CLEARANCE, 4, 0]) {
+      points = attempt(clearance);
+      if (points) {
+        if (clearance !== CLEARANCE) warnRouting(c, options);
+        break;
+      }
+    }
+    if (!points) {
+      warnRouting(c, options);
+      points = simplify([source, start, { x: start.x, y: end.y }, end, target]);
+    }
     result.set(c.id, {
       id: c.id,
       points,
