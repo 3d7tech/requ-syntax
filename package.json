@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "gallery": "node scripts/gallery.mjs",
     "requ": "node packages/cli/dist/index.js",
-    "test:browser": "node scripts/browser-smoke.mjs"
+    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:visual": "node scripts/geometry-browser.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",

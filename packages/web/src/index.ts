@@ -1,6 +1,7 @@
 import { render, type Diagnostic, type RenderOptions } from "@requstory/core";
 export interface RunOptions {
   selector?: string;
+  annotate?: boolean;
   theme?: RenderOptions["theme"];
 }
 let serial = 0;
@@ -38,7 +39,10 @@ export async function run(options: RunOptions = {}): Promise<Diagnostic[][]> {
     targets.map(async (el) => {
       const source = sources.get(el) ?? el.textContent ?? "";
       sources.set(el, source);
-      const result = await render(source, { theme: theme(options.theme) });
+      const result = await render(source, {
+        theme: theme(options.theme),
+        annotate: options.annotate,
+      });
       if (!el.isConnected) return result.diagnostics;
       const wrapper = document.createElement("div");
       wrapper.dataset.requRendered = "";
@@ -62,7 +66,7 @@ export function define(): void {
   )
     return;
   class RequDiagram extends HTMLElement {
-    static observedAttributes = ["theme", "diagram"];
+    static observedAttributes = ["theme", "diagram", "annotate"];
     private revision = 0;
     private observer = new MutationObserver(() => void this.update());
     private surface = this.attachShadow({ mode: "open" });
@@ -85,6 +89,7 @@ export function define(): void {
       const revision = ++this.revision;
       const result = await render(this.textContent ?? "", {
         theme: theme(this.getAttribute("theme")),
+        annotate: this.hasAttribute("annotate"),
         diagram: this.getAttribute("diagram") ?? undefined,
       });
       if (revision !== this.revision || !this.isConnected) return;

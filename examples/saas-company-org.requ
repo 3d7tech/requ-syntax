@@ -1,0 +1,13 @@
+org "Example SaaS company"
+team growth "Growth" owner="Growth lead"
+team product "Product" owner="Product lead"
+team support "Support" owner="Support lead"
+process growth "Attract customers"
+process product "Deliver the service"
+process support "Resolve issues"
+handoff growth -> product : "New customer"
+handoff product -> support : "Customer context"
+handoff support -> product : "Product feedback"
+stage "Discover" : growth
+stage "Use" : product
+stage "Get help" : support, product

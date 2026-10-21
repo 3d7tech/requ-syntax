@@ -1,0 +1,9 @@
+process onboarding "Employee onboarding"
+lane employee "New employee" type=customer
+lane hr "People team" owner="People lead"
+lane payroll "Payroll provider" type=external
+employee.accept: "Accept offer" start
+hr.prepare: "Prepare account and welcome pack"
+payroll.setup: "Set up payroll"
+employee.ready: "Start first day" end
+accept -> prepare -> setup -> ready

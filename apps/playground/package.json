@@ -1,0 +1,12 @@
+{
+  "name": "@requstory/playground",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@requstory/core": "workspace:*"
+  }
+}

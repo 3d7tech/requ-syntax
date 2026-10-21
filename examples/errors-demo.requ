@@ -1,0 +1,8 @@
+requ 0.1
+process errors "Broken example"
+lane support "Support"
+support.start: "Receive request" start
+start => undeclared
+this is not a valid statement
+support.broken: "Unclosed label
+support.review: "Review?" decision basis=suggested

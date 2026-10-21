@@ -1,0 +1,49 @@
+# Requ syntax v0.1
+
+Requ turns one statement per line into SVG workflow or operating-map diagrams.
+Packages use @requstory. Language: LANGUAGE.md. Full brief: spec.md.
+process <id> "Title" starts a workflow. lane <id> "Label" type=customer|team|agent|external owner="Name" declares an actor. <lane>.<step>: "Label" start|end|decision|wait declares a step. a -> b : "Label" links steps. An org uses team, process <team> "Label", handoff and stage statements. Quote labels; # starts a comment outside quotes. basis=suggested marks unconfirmed content. Diagnostics explain errors with source locations and repair hints. Review model warnings; they do not prove a real operational failure.
+
+Examples:
+
+```requ
+process refund "Customer refund"
+lane customer "Customer" type=customer
+lane support "Support" owner="Support lead"
+customer.request: "Request a refund" start
+support.review: "Review the request"
+customer.receive: "Receive refund" end
+request -> review -> receive
+```
+
+```requ
+process invoice "Invoice approval"
+lane supplier "Supplier" type=external
+lane agent "Invoice agent" type=agent
+lane finance "Finance" owner="Finance lead"
+supplier.send: "Submit invoice" start
+agent.extract: "Extract invoice details" system="Accounting system"
+finance.check: "Invoice valid?" decision
+finance.pay: "Approve payment" end
+finance.return: "Return for correction" end
+send -> extract -> check
+check -> pay : "yes"
+check -> return : "no"
+```
+
+```requ
+org "Example SaaS company"
+team growth "Growth" owner="Growth lead"
+team product "Product" owner="Product lead"
+team support "Support" owner="Support lead"
+process growth "Attract customers"
+process product "Deliver the service"
+process support "Resolve issues"
+handoff growth -> product : "New customer"
+handoff product -> support : "Customer context"
+handoff support -> product : "Product feedback"
+stage "Discover" : growth
+stage "Use" : product
+stage "Get help" : support, product
+```
+

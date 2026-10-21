@@ -1,0 +1,9 @@
+process triage "Support triage"
+lane customer "Customer" type=customer
+lane agent "Triage agent" type=agent
+lane support "Support team" owner="Support lead"
+customer.ask: "Ask for help" start
+agent.classify: "Classify request"
+support.review: "Review suggested response" basis=suggested
+support.reply: "Send response" end
+ask -> classify -> review -> reply

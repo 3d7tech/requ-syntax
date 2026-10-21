@@ -89,7 +89,9 @@ function parseDocument(text: string): ParseResult {
       break;
     }
     const loc = { line: index + 1, col: t[0].loc.col, endCol: line.length + 1 },
-      word = t[0].value.toLowerCase();
+      word = [".", ":", "->"].includes(t[1]?.value)
+        ? ""
+        : t[0].value.toLowerCase();
     let cursor = 0;
     const attrs = (allowed: string[]) => {
       const values: Record<string, string> = {};

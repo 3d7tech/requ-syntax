@@ -1,0 +1,11 @@
+process account "Bank account opening"
+lane customer "Customer" type=customer
+lane team "Account team" owner="Accounts lead"
+lane idv "Identity provider" type=external
+lane agent "Account agent" type=agent
+customer.apply: "Apply for an account" start
+idv.verify: "Verify identity"
+agent.prepare: "Prepare account details"
+team.review: "Review account setup"
+customer.activate: "Activate account" end
+apply -> verify -> prepare -> review -> activate

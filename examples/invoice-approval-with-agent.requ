@@ -1,0 +1,12 @@
+process invoice "Invoice approval"
+lane supplier "Supplier" type=external
+lane agent "Invoice agent" type=agent
+lane finance "Finance" owner="Finance lead"
+supplier.send: "Submit invoice" start
+agent.extract: "Extract invoice details" system="Accounting system"
+finance.check: "Invoice valid?" decision
+finance.pay: "Approve payment" end
+finance.return: "Return for correction" end
+send -> extract -> check
+check -> pay : "yes"
+check -> return : "no"

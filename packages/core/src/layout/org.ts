@@ -1,70 +1,119 @@
 import ELK, { type ElkNode } from "elkjs/lib/elk.bundled.js";
 import type { OrgDiagram } from "../model";
-import { measure } from "./text";
-import type { Layout } from "./types";
+import { measure, wrap } from "./text";
+import { routeEdges } from "./routing";
+import type { JourneyStage, Layout } from "./types";
+export function journeyTeamOrder(d: OrgDiagram): string[] {
+  return [
+    ...new Set([
+      ...d.journey
+        .flatMap((s) => s.teams)
+        .filter((id) => d.teams.some((t) => t.id === id)),
+      ...d.teams.map((t) => t.id),
+    ]),
+  ];
+}
 export async function layoutOrg(d: OrgDiagram): Promise<Layout> {
+  const order = journeyTeamOrder(d),
+    teams = order.map((id) => d.teams.find((t) => t.id === id)!);
+  const stages: JourneyStage[] = d.journey.map((stage, i) => {
+    const x = 16 + i * 232,
+      pills: JourneyStage["pills"] = [];
+    let left = x + 8,
+      top = 128,
+      rowHeight = 0;
+    for (const id of stage.teams) {
+      const label = d.teams.find((t) => t.id === id)?.label ?? id,
+        lines = wrap(label, 188, 12, 3),
+        width = Math.max(...lines.map((t) => measure(t, 12))) + 16,
+        height = lines.length * 16 + 8;
+      if (left + width > x + 216) {
+        left = x + 8;
+        top += rowHeight + 8;
+        rowHeight = 0;
+      }
+      pills.push({ team: id, label, lines, x: left, y: top, width, height });
+      left += width + 8;
+      rowHeight = Math.max(rowHeight, height);
+    }
+    return {
+      id: stage.id,
+      x,
+      y: 64,
+      width: 224,
+      height: Math.max(64, top + rowHeight - 64),
+      pills,
+    };
+  });
+  const contentTop = Math.max(64, ...stages.map((s) => s.y + s.height + 32));
   const elk = new ELK();
   const graph: ElkNode = await elk.layout({
     id: "root",
     layoutOptions: {
       "elk.algorithm": "layered",
       "elk.direction": "RIGHT",
-      "elk.edgeRouting": "ORTHOGONAL",
       "elk.randomSeed": "42",
-      "elk.spacing.nodeNode": "48",
       "elk.layered.spacing.nodeNodeBetweenLayers": "96",
-      "elk.padding": "[top=24,left=24,bottom=24,right=24]",
       "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
     },
-    children: d.teams.map((t) => ({
+    children: teams.map((t) => ({
       id: t.id,
-      width: 240,
-      height:
-        104 +
-        Math.min(t.processes.length, 6) * 26 +
-        (t.processes.length > 6 ? 24 : 0),
+      width: 264,
+      height: Math.max(
+        80 +
+          (t.processes.length
+            ? 16 +
+              Math.min(t.processes.length, 6) * 26 +
+              (t.processes.length > 6 ? 24 : 0)
+            : 0),
+        d.handoffs.filter((h) => h.from === t.id || h.to === t.id).length * 12 +
+          32,
+      ),
     })),
     edges: d.handoffs
       .filter(
         (h) =>
-          d.teams.some((t) => t.id === h.from) &&
-          d.teams.some((t) => t.id === h.to),
+          teams.some((t) => t.id === h.from) &&
+          teams.some((t) => t.id === h.to),
       )
-      .map((h) => ({
-        id: h.id,
-        sources: [h.from],
-        targets: [h.to],
-        labels: h.label
-          ? [
-              {
-                text: h.label,
-                width: Math.min(150, measure(h.label, 11) + 12),
-                height: 22,
-              },
-            ]
-          : [],
-      })),
+      .map((h) => ({ id: h.id, sources: [h.from], targets: [h.to] })),
   });
-  const top = d.journey.length ? 164 : 64;
-  return {
-    width: Math.max(480, (graph.width ?? 0) + 32, d.journey.length * 216 + 32),
-    height: (graph.height ?? 0) + top + 24,
-    bands: [],
-    nodes: (graph.children ?? []).map((n) => ({
-      id: n.id,
-      x: (n.x ?? 0) + 16,
-      y: (n.y ?? 0) + top,
+  // ELK determines horizontal layers; explicit rows preserve journey reading order.
+  let y = contentTop + 32;
+  const nodes = teams.map((t) => {
+    const n = graph.children!.find((n) => n.id === t.id)!;
+    const result = {
+      id: t.id,
+      x: Math.round(n.x ?? 0) + 64,
+      y,
       width: n.width!,
       height: n.height!,
-    })),
-    edges: (graph.edges ?? []).flatMap((e) =>
-      (e.sections ?? []).map((s) => ({
-        id: e.id,
-        back: false,
-        points: [s.startPoint, ...(s.bendPoints ?? []), s.endPoint].map(
-          (p) => ({ x: p.x + 16, y: p.y + top }),
-        ),
-      })),
+    };
+    y += n.height! + 64;
+    return result;
+  });
+  const edges = routeEdges(nodes, d.handoffs, 16, contentTop),
+    width = Math.max(
+      480,
+      stages.length * 232 + 32,
+      ...nodes.map((n) => n.x + n.width + 48),
+      ...edges.flatMap((e) => e.points.map((p) => p.x + 24)),
+      ...edges
+        .filter((e) => e.label)
+        .map((e) => e.label!.x + e.label!.width + 24),
+    );
+  return {
+    width,
+    height: Math.max(
+      y,
+      ...edges.flatMap((e) => e.points.map((p) => p.y + 24)),
+      ...edges
+        .filter((e) => e.label)
+        .map((e) => e.label!.y + e.label!.height + 24),
     ),
+    nodes,
+    edges,
+    bands: [],
+    stages,
   };
 }

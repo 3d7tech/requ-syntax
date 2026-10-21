@@ -39,6 +39,12 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/node@22.18.10)(happy-dom@20.0.10)
 
+  apps/playground:
+    dependencies:
+      '@requstory/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   packages/cli:
     dependencies:
       '@requstory/core':

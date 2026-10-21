@@ -1,0 +1,7 @@
+process refund "Customer refund"
+lane customer "Customer" type=customer
+lane support "Support" owner="Support lead"
+customer.request: "Request a refund" start
+support.review: "Review the request"
+customer.receive: "Receive refund" end
+request -> review -> receive
