@@ -21,3 +21,11 @@ Remote: https://github.com/3d7tech/requ-syntax (main). npm is not signed in loca
 Frontend release integration is ready in draft PR https://github.com/3d7tech/requstoryFE/pull/189. It bundles the unchanged CI artifact at rebuild/playground-release and stages it with the existing page backup/rollback manifest, sitemap and llms.txt. Local FE formatting/types, 91 tests and build pass; the full playground browser suite also passes against the integrated build. Main app JS remains index-DrfYHVOf.js. PR CI passed and PR #189 was squash-merged to FE commit 3c56277c9171fc2aee6292115b7a9aab1cd8e2a5. No app features or original spec changed.
 
 Review locally with pnpm --filter @requstory/playground preview --port 5178, then open http://127.0.0.1:5178/dev/. Website release approved and completed: https://requstory.com/dev/. Release first-draft-20261021-requ-syntax; FE staging 39574936276 and BE publication 39575245580 passed. Live playground browser checks pass at 1440/390/320px; all six live artifact files match the checked source build, including source SHA, guide, CSS and JS. /dev redirect, sitemap and llms entries are verified. Main app checks pass on phone and desktop. Rollback target: first-draft-20261020-landing-line. npm access is still unverified; no packages published.
+
+## Public launch fixes — live 21 October 2026
+
+GitHub and raw README verified in a fresh logged-out browser. Repository metadata/topics set. History pattern scan found no matching secrets or sensitive filenames across 175 unique history blobs at audit time; no private agent-binding roadmap references or issues found. Original spec remains intact.
+
+Proper Markdown guide, playable examples, nine static SVG/source pages, main-page static loan SVG, llms.txt/full reference and sitemap are live. Show gaps, Copy for AI (prompt + full guide + current source) and Open in Requstory are added. The latter opens the mapper; import is deferred.
+
+Source 8750777841df365e77a95fd4126bd1762c22eeee; syntax CI 39582199833 passed 175 tests and all browser checks. FE PR #190/CI 39582977535, staging 39596543305 and BE publish 39596747429 passed. Release first-draft-20261021-requ-public-docs. Live JavaScript-disabled guide/all nine examples and all 38 artifact files verified; root sitemap/llms entries and phone/desktop main app checks pass. Main app asset remains index-DrfYHVOf.js.
