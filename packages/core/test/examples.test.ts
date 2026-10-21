@@ -5,7 +5,7 @@ const files = readdirSync("examples")
   .filter((x) => x.endsWith(".requ"))
   .sort();
 describe("example suite", () => {
-  it("has all ten examples", () => expect(files).toHaveLength(10));
+  it("has all eleven examples", () => expect(files).toHaveLength(11));
   it.each(files)("%s parses with its intended outcome", (file) => {
     const errors = parse(
       readFileSync("examples/" + file, "utf8"),

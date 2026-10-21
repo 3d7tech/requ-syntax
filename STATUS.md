@@ -45,3 +45,9 @@ Decision diamonds are capped at 96px. Long labels move below a 72px diamond with
 ## Portable SVG — item 4 complete
 
 Core inlineStyles and CLI --inline-styles export concrete colours, fonts and strokes without CSS. Auto uses light; dark is supported explicitly. All examples render without E009, every diamond is ≤96px, rating width is 2,500px and its recovered segment-intersection count remains seven (three W008 warnings). The ten-example gallery and golden SVGs are regenerated. CairoSVG produced visible PNGs for all eleven diagrams. Build, 245 unit/integration tests, lint, ESM/IIFE embeds, browser text/padding checks and playground checks at 1440/390/320px pass. Changes are awaiting deployment review; npm still needs a publishing token.
+
+## Rating regressions and R011–R013 complete
+
+Added sovereign-rating.requ and the unchanged original Grok regression fixture. Both render all 21 steps (26/25 flows respectively) without E009 at 2,500px wide. Added R011 end-has-outflow (warning), R012 unmarked-branch (info) and R013 decision-label (info), with source locations and repair hints. The original source is kept intact rather than silently fixing its workflow or owners.
+
+Build, 277 tests, lint/types, ESM/IIFE embeds, twelve browser SVG text/padding checks and the eleven-example playground at 1440/390/320px pass. Updated the language guide, static examples, golden snapshot and gallery. Local addition to the existing fix set; no push, deployment or npm publication.

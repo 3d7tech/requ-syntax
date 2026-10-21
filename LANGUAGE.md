@@ -121,3 +121,13 @@ stage "Get help" : assist, support
 - Duplicate ids: the second wins, with a warning.
 - Unknown statements are skipped with an error diagnostic; parsing continues on the next line.
 
+
+## Process lint checks
+
+Lint findings point to the step declaration and do not stop rendering.
+
+| Code | Name | Severity | Trigger | Fix |
+| --- | --- | --- | --- | --- |
+| R011 | end-has-outflow | warning | An `end` step has an outgoing flow. | Remove `end` if work continues, or remove the outgoing flow if this is the endpoint. |
+| R012 | unmarked-branch | info | A non-decision step has at least two labelled outgoing flows. | Mark the step `decision`. Unlabelled flows do not count. |
+| R013 | decision-label | info | A decision label does not end with `?` (trailing whitespace is ignored). | Phrase its label as a question ending with `?`. |

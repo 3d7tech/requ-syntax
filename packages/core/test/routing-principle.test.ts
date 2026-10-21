@@ -56,7 +56,8 @@ it.each(readdirSync("examples").filter((f) => f.endsWith(".requ")))(
     for (const d of parse(readFileSync("examples/" + file, "utf8")).doc
       .diagrams) {
       const l = d.kind === "process" ? layoutProcess(d) : await layoutOrg(d);
-      if (file !== "bond-rating.requ") clearance(l);
+      if (!["bond-rating.requ", "sovereign-rating.requ"].includes(file))
+        clearance(l);
       expect(l.edges.length).toBe(
         d.kind === "process" ? d.flows.length : d.handoffs.length,
       );

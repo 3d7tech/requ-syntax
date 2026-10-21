@@ -95,7 +95,7 @@ Browser tests exercise the actual ESM and IIFE bundles. `PLAYWRIGHT_MODULE` can 
 
 ## Playground and release
 
-Live: https://requstory.com/dev/. Run `pnpm dev` to open the CodeMirror playground. It includes all ten examples locally (the deployed build still has nine), live SVG preview, clickable diagnostics, diagram/theme selection, owner annotation, phone Editor/Preview controls, 100%/Fit view, compressed share links, Copy SVG, Download SVG and Copy Markdown. The Vite build is `apps/playground/dist`, with `/dev/` asset paths and a crawlable guide. The playground is live at `/dev/`; the existing app routes are preserved.
+Live: https://requstory.com/dev/. Run `pnpm dev` to open the CodeMirror playground. It includes all eleven examples locally (the deployed build still has nine), live SVG preview, clickable diagnostics, diagram/theme selection, owner annotation, phone Editor/Preview controls, 100%/Fit view, compressed share links, Copy SVG, Download SVG and Copy Markdown. The Vite build is `apps/playground/dist`, with `/dev/` asset paths and a crawlable guide. The playground is live at `/dev/`; the existing app routes are preserved.
 
 Deployment uses GitHub Actions and a reviewed CI artifact in the existing paired Requstory release. See [DEPLOYMENT.md](../DEPLOYMENT.md). A manual npm workflow requires a reviewed release tag with passing CI and an NPM_TOKEN in the npm-release environment; scope access must be verified before use. Existing Requstory JSON exports stay unchanged; a lossless adapter comes later.
 

@@ -41,3 +41,13 @@ pnpm requ render examples/bond-rating.requ --inline-styles -o rating.svg
 ```
 
 For npm publishing, follow [the token steps](NPM-TOKEN.md), then tell Codex “token saved”. Never paste the token into chat.
+
+## Added rating regression sources and lint rules
+
+- `examples/sovereign-rating.requ` includes the confirmed vote → research feedback edge. The unchanged original Grok source is in `packages/core/test/fixtures/sovereign-rating-grok.requ`; it has 25 edges rather than 26. The bond-rating filename remains available.
+- Both versions render every step and flow without E009. The original renderer failed with E009; both now render at **2,500px** wide.
+- **R011 end-has-outflow — warning:** an end step has an outgoing flow.
+- **R012 unmarked-branch — info:** a non-decision has at least two labelled outgoing flows; hint: mark it decision.
+- **R013 decision-label — info:** a decision label does not end in `?`; trailing whitespace is ignored.
+- Each rule points to the step declaration, has a repair hint and ignores org diagrams. Source warnings are retained in both regression versions.
+- Build, **277 tests**, lint/types and all browser checks pass. The eleven-example gallery and sovereign golden snapshot are regenerated. The three new rules are also in the language guide used by Copy for AI.

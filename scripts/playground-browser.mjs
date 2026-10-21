@@ -91,7 +91,7 @@ try {
   await page.goto(base);
   await wait();
   assert.equal(await title(), "Support triage");
-  assert.equal(await page.locator("#examples option").count(), 10);
+  assert.equal(await page.locator("#examples option").count(), 11);
   const examples = await page
     .locator("#examples option")
     .evaluateAll((els) => els.map((el) => el.value));
@@ -295,7 +295,7 @@ try {
   assert.deepEqual(errors, []);
   assert.deepEqual(failed, []);
   console.log(
-    "Playground: all ten examples, diagrams, source, diagnostics, themes, annotation, phone views, zoom, sharing, exports, escaping and /dev assets passed",
+    "Playground: all eleven examples, diagrams, source, diagnostics, themes, annotation, phone views, zoom, sharing, exports, escaping and /dev assets passed",
   );
 } finally {
   await browser.close();

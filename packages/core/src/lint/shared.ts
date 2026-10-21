@@ -9,7 +9,12 @@ export function issue(
   return {
     code,
     severity:
-      code === "R003" || code === "R008" || code === "R009" || code === "R010"
+      code === "R003" ||
+      code === "R008" ||
+      code === "R009" ||
+      code === "R010" ||
+      code === "R012" ||
+      code === "R013"
         ? "info"
         : "warning",
     message,

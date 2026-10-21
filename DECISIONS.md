@@ -53,3 +53,9 @@ Diamonds stay between 72 and 96px. Short labels wrap to at most three lines with
 ## Portable SVG — item 4
 
 `inlineStyles` defaults to false. True resolves the generated styles into explicit SVG attributes with no style block, CSS variables or font requests. Dark is explicit; auto uses light for converters without a colour preference. The SVG includes a painted background and intrinsic scaled height. CLI flag: `--inline-styles`. Future PNG conversion and render services must opt into this mode; neither feature is introduced by this change. All examples/themes and both diagram kinds are covered; light process/dark annotated org exports have separate golden snapshots.
+
+## Rating regression sources and process lint additions
+
+`examples/sovereign-rating.requ` keeps the confirmed vote → research feedback edge; the older bond-rating filename remains compatible. `packages/core/test/fixtures/sovereign-rating-grok.requ` preserves the original user-pasted Grok source without that added edge. Both render every step and edge without E009, while retaining their real lint findings.
+
+R011 end-has-outflow warns once per end step with any outgoing flow. R012 unmarked-branch is info when a non-decision step has at least two labelled outgoing flows; blank labels do not count, and the hint says to mark the step decision. R013 decision-label is info when a decision label, after trailing whitespace is removed, does not end in `?`. All three use the step's source location and are process-only.
