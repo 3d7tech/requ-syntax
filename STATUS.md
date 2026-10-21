@@ -32,4 +32,8 @@ Source 8750777841df365e77a95fd4126bd1762c22eeee; syntax CI 39582199833 passed 17
 
 ## Renderer recovery — item 1 complete
 
-Routing retries 8/4/0px then an elbow; crowded ports and labels recover with W008. The new sovereign debt rating example includes vote → research (“more analysis”), renders all 27 edges and no E009. Before this fix it returned the error SVG; recovered layout width is 4,336px before compaction. Original nine examples keep their strict routing checks. Build, 195 tests and lint pass.
+Routing retries 8/4/0px then an elbow; crowded ports and labels recover with W008. The new sovereign debt rating example includes vote → research (“more analysis”), renders all 26 edges and no E009. Before this fix it returned the error SVG; recovered layout width is 4,336px before compaction. Original nine examples keep their strict routing checks. Build, 195 tests and lint pass.
+
+## Renderer compaction — item 2 complete
+
+Long grids now compact physical column gaps while preserving predecessor ranks, independent same-rank steps and aligned cross-lane reverse pairs. Rating width: 4,336 → 2,599px. Its recovered segment-intersection count stays at seven, with no shared segments; W008 remains visible. All original example geometry checks pass. Build, 197 tests and lint pass.

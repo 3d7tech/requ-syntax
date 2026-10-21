@@ -19,6 +19,7 @@ export interface RoutingOptions {
   bands?: Band[];
   maxY?: number;
   diagnostics?: Diagnostic[];
+  localFirst?: boolean;
 }
 function warnRouting(edge: Connection, options: RoutingOptions): void {
   const message = `Edge ${edge.from} -> ${edge.to} could not be routed cleanly.`;
@@ -529,7 +530,7 @@ function labels(
       edge.points.length === 2 && same(edge.points[0].y, edge.points[1].y);
     const labelWidth = straight
       ? Math.max(
-          48,
+          16,
           Math.min(144, Math.abs(edge.points[1].x - edge.points[0].x) - 24),
         )
       : 144;
@@ -656,6 +657,8 @@ function labels(
         return { ...box, x: Math.max(minX, box.x), y };
       });
       const score = (box: PlacedLabel) =>
+        nodes.filter((n) => boxesOverlap(box, n)).length * 100000 +
+        placed.filter((p) => boxesOverlap(box, p)).length * 10000 +
         nodes.filter((n) => boxesOverlap(box, n, 6)).length * 1000 +
         placed.filter((p) => boxesOverlap(box, p, 6)).length * 100 +
         edges.filter(
@@ -698,8 +701,11 @@ export function routeEdges(
       );
     return (
       Number(bPair) - Number(aPair) ||
-      Math.abs(row(nodeMap.get(b.from)!) - row(nodeMap.get(b.to)!)) -
-        Math.abs(row(nodeMap.get(a.from)!) - row(nodeMap.get(a.to)!))
+      (options.localFirst
+        ? Math.abs(column(nodeMap.get(a.from)!) - column(nodeMap.get(a.to)!)) -
+          Math.abs(column(nodeMap.get(b.from)!) - column(nodeMap.get(b.to)!))
+        : Math.abs(row(nodeMap.get(b.from)!) - row(nodeMap.get(b.to)!)) -
+          Math.abs(row(nodeMap.get(a.from)!) - row(nodeMap.get(a.to)!)))
     );
   });
   for (const c of ordered) {

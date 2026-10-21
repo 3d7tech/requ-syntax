@@ -81,10 +81,39 @@ export function layoutProcess(d: ProcessDiagram): Layout {
           .map((s) => sizes.get(s.id)!.width),
       ),
   );
-  const columnX = columnWidths.map(
+  const spaciousX = columnWidths.map(
     (_, i) =>
       224 + columnWidths.slice(0, i).reduce((sum, w) => sum + w + 112, 0),
   );
+  // Longest-path ranks already share independent steps. Compact their physical
+  // spacing too: adjacent ranks in different lanes can overlap horizontally.
+  // Keep a 56px routing gutter between boxes that occupy the same lane.
+  const compact = spaciousX.at(-1)! + columnWidths.at(-1)! + 48 > 2600;
+  const columnX: number[] = [];
+  for (let column = 0; column < columnWidths.length; column++) {
+    if (!compact) {
+      columnX.push(spaciousX[column]);
+      continue;
+    }
+    let x = column
+      ? columnX[column - 1] +
+        (columnWidths[column - 1] - columnWidths[column]) / 2 +
+        32
+      : 224;
+    for (const lane of d.lanes) {
+      if (
+        !steps.some((s) => s.lane === lane.id && columns.get(s.id) === column)
+      )
+        continue;
+      const previous = steps
+        .filter((s) => s.lane === lane.id && columns.get(s.id)! < column)
+        .map((s) => columns.get(s.id)!);
+      if (!previous.length) continue;
+      const before = Math.max(...previous);
+      x = Math.max(x, columnX[before] + columnWidths[before] + 56);
+    }
+    columnX.push(x);
+  }
   const nodes: Layout["nodes"] = [],
     bands: Layout["bands"] = [];
   let y = 64;
@@ -146,6 +175,7 @@ export function layoutProcess(d: ProcessDiagram): Layout {
       bands,
       mode: "row",
       diagnostics,
+      localFirst: compact,
     }),
     width = Math.max(
       480,
