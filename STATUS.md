@@ -51,3 +51,7 @@ Core inlineStyles and CLI --inline-styles export concrete colours, fonts and str
 Added sovereign-rating.requ and the unchanged original Grok regression fixture. Both render all 21 steps (26/25 flows respectively) without E009 at 2,500px wide. Added R011 end-has-outflow (warning), R012 unmarked-branch (info) and R013 decision-label (info), with source locations and repair hints. The original source is kept intact rather than silently fixing its workflow or owners.
 
 Build, 277 tests, lint/types, ESM/IIFE embeds, twelve browser SVG text/padding checks and the eleven-example playground at 1440/390/320px pass. Updated the language guide, static examples, golden snapshot and gallery. Local addition to the existing fix set; no push, deployment or npm publication.
+
+## npm packages published — 21 October 2026
+
+@requstory/core, @requstory/cli and @requstory/web 0.1.1 are published (latest). Earlier "no npm publication" notes above are superseded. A clean install of 0.1.1 lints, renders and exports inline-style SVG. The 0.1.0 CLI declared a `workspace:*` dependency and fails to install (EUNSUPPORTEDPROTOCOL); the README now pins 0.1.1. Deprecating 0.1.0 needs an npm login (`npm deprecate @requstory/cli@0.1.0 "Use 0.1.1"`).

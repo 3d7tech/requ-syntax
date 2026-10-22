@@ -24,7 +24,7 @@ approve -> receive : "approved"
 Save the example above as `workflow.requ`, then render it with Node 20 or later:
 
 ```sh
-npx @requstory/cli@0.1.0 render workflow.requ -o workflow.svg
+npx @requstory/cli@0.1.1 render workflow.requ -o workflow.svg
 ```
 
 Or render Requ on a web page:
