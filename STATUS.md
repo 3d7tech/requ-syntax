@@ -54,4 +54,6 @@ Build, 277 tests, lint/types, ESM/IIFE embeds, twelve browser SVG text/padding c
 
 ## npm packages published — 21 October 2026
 
-@requstory/core, @requstory/cli and @requstory/web 0.1.1 are published (latest). Earlier "no npm publication" notes above are superseded. A clean install of 0.1.1 lints, renders and exports inline-style SVG. The 0.1.0 CLI declared a `workspace:*` dependency and fails to install (EUNSUPPORTEDPROTOCOL); the README now pins 0.1.1. Deprecating 0.1.0 needs an npm login (`npm deprecate @requstory/cli@0.1.0 "Use 0.1.1"`).
+@requstory/core, @requstory/cli and @requstory/web 0.1.1 are published (latest). Earlier "no npm publication" notes above are superseded. A clean install of 0.1.1 lints, renders and exports inline-style SVG. The 0.1.0 CLI and web packages declared a `workspace:*` dependency and fail to install (EUNSUPPORTEDPROTOCOL); the README now pins 0.1.1.
+
+Deprecated on 22 October 2026: cli and web 0.1.0 ("Broken install; use 0.1.1") and the core, cli and web 0.0.0-stage placeholders ("Placeholder; use 0.1.1"). Core 0.1.0 installs correctly and is not deprecated. Verified against the registry; latest remains 0.1.1 for all three.
