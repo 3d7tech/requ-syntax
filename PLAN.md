@@ -1,6 +1,6 @@
 # Requ syntax — proposed build plan
 
-Status: approved 21 October 2026. Milestones 1–7 complete; playground live at https://requstory.com/dev/ after approval on 21 October 2026. npm publishing access remains unverified.
+Status: approved 21 October 2026. Milestones 1–7 complete; playground live at https://requstory.com/dev/ after approval on 21 October 2026. Packages @requstory/core, cli and web 0.1.1 are published on npm.
 
 ## Goal
 
