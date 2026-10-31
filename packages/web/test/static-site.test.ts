@@ -13,7 +13,8 @@ describe("public Requ documentation", () => {
   });
   it("ships static diagrams, source and discovery links for every example", async () => {
     const { files, examples, landing } = await staticSite();
-    expect(examples).toHaveLength(11);
+    expect(examples).toHaveLength(10);
+    expect(examples.map((e) => e.id)).not.toContain("bond-rating");
     expect(landing).toContain("<svg");
     for (const example of examples) {
       const path = `examples/${example.id}/index.html`;

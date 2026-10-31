@@ -2,7 +2,7 @@
 
 > An open-source language for swimlane workflows and operating maps.
 
-Requ uses one statement per line. Use the language guide to write valid source. Diagrams and source are readable without JavaScript. Requstory import/export is not available yet.
+Requ uses one statement per line. Use the language guide to write valid source. Diagrams and source are readable without JavaScript. Requstory exports Requ (a Requ prompt and operating-model.requ from a saved map) and reads a published operating-model.requ on its next website check.
 
 ## Documentation
 - [Playground](https://requstory.com/dev/): editor, diagnostics and SVG export.

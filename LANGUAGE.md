@@ -24,7 +24,7 @@ Requ is line-based: one statement per line, indentation ignored, `#` starts a co
 | `note` | any element | quoted text | Tooltip (`<title>`) in SVG |
 | `system` | step | quoted name, e.g. `"Salesforce"` | Small tag under the step label |
 
-The `basis` attribute records provenance within Requ. Requstory import/export is not available yet.
+The `basis` attribute records provenance within Requ. Requstory exports Requ: from a saved map you can download a Requ prompt for developers and AI coding agents, and `operating-model.requ` to publish at the root of your website. Requstory reads a published `operating-model.requ` on its next website check. Opening a Requ file as a new map in the Requstory app is not available yet.
 
 ## Process diagrams (swimlane workflow)
 
