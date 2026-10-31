@@ -15,11 +15,14 @@ const css = `html{color-scheme:light dark;background:light-dark(#fff,#171b20);co
 function page(title: string, path: string, body: string, description: string) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} | Requ syntax</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="https://requstory.com/dev/${path}"><style>${css}</style></head><body><nav aria-label="Resources"><a href="/dev/">Playground</a><a href="/dev/guide.html">Language guide</a><a href="/dev/examples/">Examples</a><a href="https://github.com/3d7tech/requ-syntax">GitHub</a></nav><main>${body}</main><footer>Requ syntax · MIT · <a href="/dev/llms.txt">For LLMs</a></footer></body></html>`;
 }
+/** Kept in examples/ for regression tests only: bond-rating.requ is the same diagram as sovereign-rating.requ. */
+export const TEST_ONLY = new Set(["bond-rating.requ"]);
+
 export async function staticSite() {
   const files = new Map<string, string>();
   const language = readFileSync(new URL("LANGUAGE.md", root), "utf8");
   const examples = readdirSync(new URL("examples/", root))
-    .filter((name) => name.endsWith(".requ"))
+    .filter((name) => name.endsWith(".requ") && !TEST_ONLY.has(name))
     .sort()
     .map((name) => {
       const source = readFileSync(new URL("examples/" + name, root), "utf8");
@@ -74,7 +77,7 @@ export async function staticSite() {
       "Requ examples",
       "examples/",
       `<h1>Requ examples</h1><p>Rendered diagrams and their complete source. No JavaScript needed.</p><ul class="examples">${links}</ul>`,
-      "Nine Requ workflow and operating-map examples with static SVG diagrams and source.",
+      `${examples.length} Requ workflow and operating-map examples with static SVG diagrams and source.`,
     ),
   );
   const urls = [
@@ -115,7 +118,7 @@ export async function staticSite() {
     );
     urls.push(`https://requstory.com/dev/examples/${example.id}/`);
   }
-  const llms = `# Requ syntax\n\n> An open-source language for swimlane workflows and operating maps.\n\nRequ uses one statement per line. Use the language guide to write valid source. Diagrams and source are readable without JavaScript. Requstory import/export is not available yet.\n\n## Documentation\n- [Playground](https://requstory.com/dev/): editor, diagnostics and SVG export.\n- [Language guide](https://requstory.com/dev/guide.html): complete syntax and examples.\n- [Plain-text language guide](https://requstory.com/dev/LANGUAGE.md)\n- [Full LLM reference](https://requstory.com/dev/llms-full.txt): guide and all example source.\n- [Source repository](https://github.com/3d7tech/requ-syntax)\n\n## Examples\n${examples.map((e) => `- [${e.title}](https://requstory.com/dev/examples/${e.id}/): static SVG and complete Requ source.`).join("\n")}\n`;
+  const llms = `# Requ syntax\n\n> An open-source language for swimlane workflows and operating maps.\n\nRequ uses one statement per line. Use the language guide to write valid source. Diagrams and source are readable without JavaScript. Requstory exports Requ (a Requ prompt and operating-model.requ from a saved map) and reads a published operating-model.requ on its next website check.\n\n## Documentation\n- [Playground](https://requstory.com/dev/): editor, diagnostics and SVG export.\n- [Language guide](https://requstory.com/dev/guide.html): complete syntax and examples.\n- [Plain-text language guide](https://requstory.com/dev/LANGUAGE.md)\n- [Full LLM reference](https://requstory.com/dev/llms-full.txt): guide and all example source.\n- [Source repository](https://github.com/3d7tech/requ-syntax)\n\n## Examples\n${examples.map((e) => `- [${e.title}](https://requstory.com/dev/examples/${e.id}/): static SVG and complete Requ source.`).join("\n")}\n`;
   files.set("llms.txt", llms);
   files.set(
     "llms-full.txt",
