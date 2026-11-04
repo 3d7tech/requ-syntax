@@ -1,6 +1,6 @@
 # Requ language guide
 
-Language version 0.1.
+Language version 0.2. Files that start `requ 0.1` stay valid; 0.2 adds the `term` line.
 
 Requ is line-based: one statement per line, indentation ignored, `#` starts a comment. This keeps it robust when an LLM gets whitespace wrong. A file holds one or more diagrams; each starts with a `process` or `org` header line.
 
@@ -11,7 +11,7 @@ Requ is line-based: one statement per line, indentation ignored, `#` starts a co
 - **Attributes:** `key=value` pairs after the label. Values with spaces are quoted. Unknown keys produce a warning, not an error.
 - **Arrows:** `->` only. Chains are allowed: `a -> b -> c`.
 - **Edge labels:** `: "text"` at the end of a flow or handoff line.
-- **Optional version line:** `requ 0.1` as the first line.
+- **Optional version line:** `requ 0.2` (or `requ 0.1`) as the first line.
 - **Markdown fence language:** `requ`.
 
 ## Shared attributes
@@ -83,6 +83,7 @@ Step ids are unique within a process, so flows reference steps without the lane 
 | Process | `process <teamId> "<label>" ref=<processId>?` | A process owned by a team. `ref` links to a process diagram in the same file. |
 | Handoff | `handoff <teamId> -> <teamId> : "what is handed over"` | Work moving between teams. |
 | Journey stage | `stage "<label>" : <teamId>, <teamId>` | A customer-journey stage and the teams that touch it. Order of declaration = journey order. |
+| Term (0.2) | `term <id> "<value>" url="…"?` | A fact about doing business with the organisation, read by people and AI agents: `minimum_order`, `payment`, `delivery`, `returns`, `apply`, `contact`. Ids are free; `url` points to the page that states it. Not drawn. |
 
 ### Northbank Retail
 
@@ -110,6 +111,10 @@ stage "Discover" : marketing
 stage "Apply" : lending, assist
 stage "Get funds" : ops
 stage "Get help" : assist, support
+
+term minimum_order "£150 per order"
+term payment "30 days on account after approval"
+term apply "Apply for a trade account" url="https://northbank.example/trade"
 ```
 
 ## Leniency rules (important for LLM output)

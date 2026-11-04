@@ -146,12 +146,12 @@ function parseDocument(text: string): ParseResult {
           .map((x) => x.value)
           .join("");
         doc.version = version;
-        if (version !== "0.1")
+        if (version !== "0.1" && version !== "0.2")
           add(
             "W006",
             `Version ${version} is not supported.`,
             loc,
-            "Use requ 0.1.",
+            "Use requ 0.2.",
           );
         continue;
       }
@@ -206,6 +206,7 @@ function parseDocument(text: string): ParseResult {
                 teams: [],
                 handoffs: [],
                 journey: [],
+                terms: [],
               }
             : {
                 ...common(id, name, a),
@@ -237,6 +238,19 @@ function parseDocument(text: string): ParseResult {
         explicit.set(lane, new Set(Object.keys(a)));
         if (current.kind === "process") replace(current.lanes, lane);
         else replace(current.teams, { ...lane, processes: [] } as Team);
+        continue;
+      }
+      if (word === "term") {
+        if (current.kind !== "org")
+          throw Error("Terms belong in an org diagram.");
+        cursor = 1;
+        const id = identifier(t[cursor++]),
+          value = label(),
+          a = attrs([...shared, "url"]);
+        replace(current.terms, {
+          ...common(id, value, a),
+          ...(a.url ? { url: a.url } : {}),
+        });
         continue;
       }
       if (word === "stage") {
