@@ -110,6 +110,7 @@ Step ids are unique within a process, so flows reference steps without the lane 
 | Process | `process <teamId> "<label>" ref=<processId>?` | A process owned by a team. `ref` links to a process diagram in the same file. |
 | Handoff | `handoff <teamId> -> <teamId> : "what is handed over"` | Work moving between teams. |
 | Journey stage | `stage "<label>" : <teamId>, <teamId>` | A customer-journey stage and the teams that touch it. Order of declaration = journey order. |
+| Term (0.2) | `term <id> "<value>" url="…"?` | A fact about doing business with the organisation, read by people and AI agents: `minimum_order`, `payment`, `delivery`, `returns`, `apply`, `contact`. Ids are free; `url` points to the page that states it. Not drawn. |
 
 Example:
 
@@ -137,6 +138,10 @@ stage "Discover" : marketing
 stage "Apply" : lending, assist
 stage "Get funds" : ops
 stage "Get help" : assist, support
+
+term minimum_order "£150 per order"
+term payment "30 days on account after approval"
+term apply "Apply for a trade account" url="https://northbank.example/trade"
 ```
 
 ### Leniency rules (important for LLM output)

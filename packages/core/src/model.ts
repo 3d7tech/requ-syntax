@@ -49,11 +49,16 @@ export interface Handoff extends Common {
 export interface Stage extends Common {
   teams: string[];
 }
+/** A fact about doing business with the organisation, e.g. `term minimum_order "£150"`. The label holds the value. */
+export interface Term extends Common {
+  url?: string;
+}
 export interface OrgDiagram extends Common {
   kind: "org";
   teams: Team[];
   handoffs: Handoff[];
   journey: Stage[];
+  terms: Term[];
 }
 export type Diagram = ProcessDiagram | OrgDiagram;
 export interface RequDocument {
